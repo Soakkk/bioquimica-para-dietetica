@@ -124,6 +124,47 @@ const functionalGroups = [
   ["Tiol", "R—SH", "etanotiol"], ["Halogenado", "R—X", "cloroetano"], ["Sal orgánica", "R—COO⁻ M⁺", "etanoato de sodio"],
 ];
 
+const studySections: Record<number, { heading: string; paragraphs: string[]; worked?: { title: string; formula: string; steps: string[] } }[]> = {
+  0: [
+    { heading: "1. Del átomo a los electrones de valencia", paragraphs: ["Un átomo tiene un núcleo y electrones distribuidos en capas. Para comprender los enlaces orgánicos no necesitamos seguir todos sus electrones: observamos sobre todo los de la capa externa, llamados electrones de valencia.", "El carbono tiene 6 electrones en total: 2 ocupan la primera capa y 4 quedan en la segunda. Por tanto, tiene cuatro electrones de valencia. El oxígeno tiene seis electrones de valencia; el nitrógeno, cinco; y el hidrógeno, uno."] },
+    { heading: "2. Compartir para alcanzar una situación estable", paragraphs: ["Muchos átomos de la segunda fila son especialmente estables cuando pueden contar ocho electrones a su alrededor. Es la regla del octeto. El hidrógeno es la excepción más importante: su primera capa se completa con dos.", "En un enlace covalente, dos átomos comparten electrones. Una raya representa un par compartido. Los electrones no pasan a pertenecer por completo al otro átomo: ambos los cuentan a su alrededor."], worked: { title: "Ejemplo resuelto: metano", formula: "CH₄", steps: ["El C necesita completar cuatro enlaces.", "Cada H solo puede formar un enlace.", "El C comparte un par con cada uno de los cuatro H.", "Resultado: cuatro enlaces C—H y octeto completo alrededor del C."] } },
+    { heading: "3. Distintas formas de escribir la misma molécula", paragraphs: ["La fórmula molecular indica cuántos átomos hay, pero no cómo se conectan: C₂H₆. La semidesarrollada agrupa los hidrógenos y muestra las conexiones principales: CH₃—CH₃. La desarrollada dibuja todos los enlaces.", "La fórmula empírica reduce los subíndices a la proporción mínima. Para el etano C₂H₆ es CH₃. Esto no significa que CH₃ aislado sea la molécula de etano."] },
+  ],
+  1: [
+    { heading: "1. La cuenta hasta cuatro", paragraphs: ["El carbono neutro que usaremos habitualmente en química orgánica debe sumar cuatro enlaces. No tiene que estar unido a cuatro átomos diferentes: importa la suma del orden de los enlaces.", "Un enlace simple suma 1, uno doble suma 2 y uno triple suma 3. Después añadimos los enlaces C—H necesarios hasta llegar a cuatro."], worked: { title: "Ejemplo resuelto: propeno", formula: "CH₃—CH=CH₂", steps: ["C izquierdo: 3 enlaces con H + 1 con C = 4.", "C central: 1 con H + 1 simple + 2 del doble = 4.", "C derecho: 2 con H + 2 del doble = 4.", "Los tres carbonos cumplen su tetravalencia."] } },
+    { heading: "2. Cómo descubrir los hidrógenos que faltan", paragraphs: ["Dibuja primero el esqueleto de carbonos y sus enlaces múltiples. Después analiza cada carbono por separado. Resta a cuatro la suma de los enlaces que ya tiene: el resultado suele ser el número de hidrógenos que debes añadir.", "Por ejemplo, un carbono terminal unido mediante un enlace simple a otro carbono usa 1 enlace y conserva 3 para H: será CH₃. Si está unido mediante un doble enlace, conserva 2: será CH₂."] },
+    { heading: "3. Valencia y grado no son lo mismo", paragraphs: ["Para comprobar la valencia se cuentan todas las rayas, incluidas las que unen H, O o N. Para clasificar un carbono como primario, secundario, terciario o cuaternario solo se cuentan sus vecinos carbono.", "Un carbono cuaternario no se llama así por tener cuatro enlaces —eso es habitual—, sino porque está unido directamente a cuatro carbonos distintos."] },
+  ],
+  2: [
+    { heading: "1. La gramática de un nombre orgánico", paragraphs: ["El prefijo indica el número de carbonos de la cadena principal: met- (1), et- (2), prop- (3), but- (4), pent- (5), hex- (6). El sufijo indica la familia: -ano, -eno, -ino, -ol, -al, -ona o -oico.", "Los números o localizadores señalan posiciones. Los prefijos di-, tri- y tetra- indican que un sustituyente aparece dos, tres o cuatro veces."] },
+    { heading: "2. Elegir y numerar la cadena principal", paragraphs: ["Busca la cadena continua que contenga el grupo funcional principal y el mayor número posible de enlaces múltiples. No siempre es la línea que se ve más recta en el dibujo.", "Numera desde el extremo que dé el localizador más bajo al grupo principal y, después, a los enlaces múltiples y sustituyentes según las reglas del nivel que estés estudiando."], worked: { title: "Ejemplo resuelto: 2-metilbutano", formula: "CH₃—CH(CH₃)—CH₂—CH₃", steps: ["La cadena continua más larga tiene 4 C: butano.", "Queda un grupo CH₃ como sustituyente: metil.", "Numeramos desde el extremo más cercano: posición 2.", "Nombre: 2-metilbutano."] } },
+    { heading: "3. Método para formular", paragraphs: ["Primero dibuja la cadena indicada por el prefijo. Coloca después dobles o triples enlaces y grupos funcionales en sus posiciones. Añade los sustituyentes y deja los hidrógenos para el final.", "Termina siempre con una auditoría: C debe sumar 4, H 1, O 2 y N normalmente 3. Esta comprobación detecta gran parte de los errores de formulación."] },
+  ],
+  3: [
+    { heading: "1. Saturación e insaturación", paragraphs: ["Los alcanos abiertos solo contienen enlaces simples y siguen CₙH₂ₙ₊₂. Se llaman saturados porque tienen el máximo número posible de hidrógenos.", "Un alqueno contiene al menos un C=C y un alquino, al menos un C≡C. Cada doble enlace reduce dos H respecto al alcano correspondiente; un triple reduce cuatro."], worked: { title: "Comparación con dos carbonos", formula: "etano → eteno → etino", steps: ["Etano: C₂H₆, enlace C—C.", "Eteno: C₂H₄, enlace C=C.", "Etino: C₂H₂, enlace C≡C.", "Más enlaces entre C significa menos espacio para H."] } },
+    { heading: "2. Cadenas cerradas y aromaticidad", paragraphs: ["Un cicloalcanos forma un anillo con enlaces simples. Al cerrar la cadena se pierden dos H, por eso un ciclo con un solo anillo suele seguir CₙH₂ₙ.", "Los compuestos aromáticos, como el benceno, poseen un sistema electrónico especial que no debe entenderse simplemente como tres dobles enlaces aislados. Al principio aprenderemos a reconocer el anillo y sus sustituyentes."] },
+    { heading: "3. Heterociclos", paragraphs: ["Un heterociclo es un anillo en el que al menos una posición está ocupada por N, O o S. Como ya no contiene exclusivamente C e H, no es estrictamente un hidrocarburo.", "Los heterociclos son esenciales en bioquímica: aparecen, por ejemplo, en las bases nitrogenadas del ADN y en numerosas vitaminas y coenzimas."] },
+  ],
+  4: [
+    { heading: "1. El grupo funcional decide la familia", paragraphs: ["Un grupo funcional es una disposición concreta de átomos que aporta propiedades y reactividad características. Para leer una molécula, localiza primero ese grupo y solo después estudia el resto de la cadena.", "R representa una cadena carbonada cualquiera y Ar un sistema aromático. Así, R—OH es un alcohol y Ar—OH es un fenol, aunque ambos contengan —OH."] },
+    { heading: "2. El carbonilo C=O", paragraphs: ["El grupo C=O se llama carbonilo. Si aparece al final como —CHO, tenemos un aldehído. Si está entre dos carbonos, R—CO—R′, es una cetona.", "Si ese mismo carbono también está unido a —OH, aparece el carboxilo —COOH de los ácidos carboxílicos. Si está unido a —O—R′, tenemos un éster."], worked: { title: "Compara antes de memorizar", formula: "—CHO · —CO— · —COOH · —COO—", steps: ["—CHO al final: aldehído.", "—CO— entre carbonos: cetona.", "—COOH: ácido carboxílico.", "—COO— entre dos cadenas: éster."] } },
+    { heading: "3. Familias con nitrógeno, azufre y halógenos", paragraphs: ["Una amina contiene N sin un carbonilo directamente unido; una amida sí contiene —C(=O)—N—. Esta diferencia es decisiva: el enlace peptídico es una amida.", "Los tioles contienen —SH. Los derivados halogenados sustituyen uno o varios H por F, Cl, Br o I. Aprende a reconocer primero la estructura; el nombre será la consecuencia."] },
+  ],
+  5: [
+    { heading: "1. Una fórmula puede esconder varias estructuras", paragraphs: ["Los isómeros tienen la misma fórmula molecular, pero no son la misma sustancia. Antes de comparar dibujos, cuenta todos los átomos: si no coinciden exactamente, no existe isomería.", "En la isomería estructural cambia la manera en que los átomos están conectados. Puede cambiar la cadena, la posición de un grupo o incluso el grupo funcional."], worked: { title: "Ejemplo: C₄H₁₀", formula: "butano / 2-metilpropano", steps: ["Ambos contienen 4 C y 10 H.", "El butano presenta una cadena lineal de cuatro C.", "El 2-metilpropano tiene una cadena ramificada.", "Son isómeros de cadena."] } },
+    { heading: "2. Cadena, posición y función", paragraphs: ["En la isomería de cadena cambia el esqueleto carbonado. En la de posición se mantiene la familia, pero cambia el lugar del enlace múltiple, sustituyente o grupo funcional.", "En la isomería de función cambia la familia química. C₂H₆O puede corresponder a etanol, un alcohol, o a dimetil éter, un éter."] },
+    { heading: "3. Isomería espacial", paragraphs: ["Algunas moléculas mantienen las mismas conexiones, pero difieren en la orientación espacial. En ciertos alquenos aparece la isomería geométrica cis/trans porque el doble enlace impide el giro libre.", "La isomería óptica se estudiará cuando aparezcan carbonos con cuatro sustituyentes diferentes. No hace falta introducirla antes de dominar la representación tridimensional básica."] },
+  ],
+  6: [
+    { heading: "1. Leer biomoléculas por fragmentos", paragraphs: ["Las biomoléculas pueden parecer enormes, pero están construidas con los mismos enlaces y grupos funcionales. Recorre primero el esqueleto de carbonos y rodea cada —OH, C=O, —COOH, —NH₂ o —SH.", "Después pregunta qué aporta cada zona: polaridad, posibilidad de formar enlaces de hidrógeno, acidez o reactividad. No intentes memorizar el dibujo completo de una vez."] },
+    { heading: "2. Glúcidos y lípidos", paragraphs: ["La glucosa contiene varios grupos alcohol y un carbonilo en su forma abierta. El glicerol es un alcohol con tres —OH.", "Un ácido graso combina una larga zona hidrocarbonada con un grupo —COOH. Cuando glicerol y ácidos grasos reaccionan, se forman enlaces éster en los triglicéridos."], worked: { title: "Método de lectura", formula: "cadena larga—COOH", steps: ["La cadena C—C/C—H es mayoritariamente apolar.", "El extremo —COOH es un ácido carboxílico.", "La longitud y los dobles enlaces afectan a sus propiedades.", "Ya has identificado un ácido graso sin memorizarlo entero."] } },
+    { heading: "3. Aminoácidos y proteínas", paragraphs: ["Un aminoácido típico contiene un grupo amino y un grupo carboxilo unidos al mismo carbono central, además de H y una cadena lateral R.", "Al unirse dos aminoácidos, el carboxilo de uno y el amino del otro forman un enlace peptídico —C(=O)—NH—. Químicamente pertenece a la familia de las amidas."] },
+  ],
+};
+
+const questionTheory = [1, 1, 1, 1, 1, 3, 2, 0, 1, 1, 4, 4];
+const modulePracticeLevel = [4, 2, 4, 1, 6, 4, 6];
+
 const questions = [
   { level: 1, title: "Detective de enlaces", prompt: "En CH₂=CH₂, ¿cuántos pares de electrones comparten los dos carbonos?", formula: "CH₂ = CH₂", options: ["1 par", "2 pares", "4 pares"], answer: 1, explain: "El signo = representa dos enlaces: son 2 pares, es decir, 4 electrones compartidos." },
   { level: 1, title: "Detective de enlaces", prompt: "¿Cuántos enlaces suma el carbono central de CH₃—CH=CH₂?", formula: "CH₃ — CH = CH₂", options: ["3", "4", "5"], answer: 1, explain: "Suma 1 con H + 1 con el C izquierdo + 2 con el C derecho = 4." },
@@ -168,9 +209,10 @@ export default function Home() {
   const [atoms, setAtoms] = useState<Atom[]>([]);
   const [bonds, setBonds] = useState<Bond[]>([]);
   const [bondOrder, setBondOrder] = useState<1 | 2 | 3>(1);
-  const [tool, setTool] = useState<"move" | "bond" | "delete">("move");
+  const [tool, setTool] = useState<"move" | "bond" | "delete">("bond");
   const [firstAtom, setFirstAtom] = useState<number | null>(null);
   const [targetAt, setTargetAt] = useState(0);
+  const [labReturnQuestion, setLabReturnQuestion] = useState<number | null>(null);
   const [labFeedback, setLabFeedback] = useState<string>("Arrastra un átomo o toca uno de la paleta para empezar.");
   const [tutorOpen, setTutorOpen] = useState(false);
   const [tutorInput, setTutorInput] = useState("");
@@ -202,6 +244,8 @@ export default function Home() {
   const levelQuestions = questions.map((q, i) => ({ ...q, globalIndex: i })).filter((q) => q.level === level);
   const question = levelQuestions[Math.min(questionAt, levelQuestions.length - 1)];
   const currentTarget = labTargets[targetAt];
+  const relatedModule = modules[questionTheory[question.globalIndex]];
+  const labStep = atoms.length < 2 ? 1 : tool !== "bond" ? 2 : firstAtom === null ? 3 : 4;
 
   const bondTotals = useMemo(() => {
     const totals: Record<number, number> = {};
@@ -222,21 +266,43 @@ export default function Home() {
     if (picked === question.answer) {
       setFeedback("correct");
       if (!solved.includes(question.globalIndex)) { setSolved((v) => [...v, question.globalIndex]); earn(20); }
-      if (question.level === 3 && question.options.length === 1) setTimeout(() => setMode("lab"), 650);
     } else setFeedback("wrong");
   }
 
   function nextQuestion() {
-    setQuestionAt((v) => (v + 1) % levelQuestions.length);
+    if (questionAt < levelQuestions.length - 1) setQuestionAt((v) => v + 1);
+    else if (level < levelNames.length) { setLevel((v) => v + 1); setQuestionAt(0); }
+    else setQuestionAt(0);
     setPicked(null); setFeedback(null); setShowHint(false);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function openRelatedTheory() {
+    setModuleId(questionTheory[question.globalIndex]);
+    setMode("learn");
+    setTimeout(() => document.getElementById("guide")?.scrollIntoView({ behavior: "smooth" }), 50);
+  }
+
+  function startLabActivity() {
+    setTargetAt(0);
+    clearLab();
+    setLabReturnQuestion(question.globalIndex);
+    setMode("lab");
+    setTool("bond");
+    setLabFeedback("Paso 1: añade un carbono y cuatro hidrógenos. Después toca dos átomos para unirlos.");
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   function addAtom(element: ElementKey, x?: number, y?: number) {
     const box = canvasRef.current?.getBoundingClientRect();
-    const px = x ?? (box ? box.width / 2 + (Math.random() - .5) * 150 : 250);
-    const py = y ?? (box ? box.height / 2 + (Math.random() - .5) * 100 : 180);
+    const placements = [[.5, .5], [.22, .25], [.78, .25], [.22, .75], [.78, .75], [.5, .16], [.5, .84], [.12, .5], [.88, .5]];
+    const place = placements[atoms.length % placements.length];
+    const px = x ?? (box ? box.width * place[0] : 250);
+    const py = y ?? (box ? box.height * place[1] : 180);
     setAtoms((v) => [...v, { id: Date.now() + Math.random(), element, x: Math.max(34, px), y: Math.max(34, py) }]);
-    setLabFeedback(`${element} colocado. Ahora puedes moverlo o cambiar a la herramienta de enlace.`);
+    setTool("bond");
+    setFirstAtom(null);
+    setLabFeedback(`${element} colocado. Enlace ${bondOrder === 1 ? "simple" : bondOrder === 2 ? "doble" : "triple"} activo: toca el primer átomo y después el segundo.`);
   }
 
   function onDrop(e: DragEvent<HTMLDivElement>) {
@@ -254,13 +320,13 @@ export default function Home() {
       setFirstAtom(null); setLabFeedback("Átomo y sus enlaces eliminados."); return;
     }
     if (tool === "bond") {
-      if (firstAtom === null) { setFirstAtom(atom.id); setLabFeedback(`Primer átomo: ${atom.element}. Elige el segundo.`); }
+      if (firstAtom === null) { setFirstAtom(atom.id); setLabFeedback(`Primer átomo elegido: ${atom.element}. Ahora toca el segundo átomo para crear el enlace.`); }
       else if (firstAtom !== atom.id) {
         const existing = bonds.find((b) => (b.a === firstAtom && b.b === atom.id) || (b.b === firstAtom && b.a === atom.id));
         if (existing) setBonds((v) => v.map((b) => b.id === existing.id ? { ...b, order: bondOrder } : b));
         else setBonds((v) => [...v, { id: Date.now() + Math.random(), a: firstAtom, b: atom.id, order: bondOrder }]);
         setFirstAtom(null); setLabFeedback(`Enlace ${bondOrder === 1 ? "simple" : bondOrder === 2 ? "doble" : "triple"} creado.`);
-      }
+      } else { setFirstAtom(null); setLabFeedback("Selección cancelada. Toca un átomo para empezar de nuevo."); }
       return;
     }
     const box = canvasRef.current?.getBoundingClientRect();
@@ -284,7 +350,7 @@ export default function Home() {
     if (tool === "delete") { setBonds((v) => v.filter((b) => b.id !== id)); setLabFeedback("Enlace eliminado."); }
   }
 
-  function clearLab() { setAtoms([]); setBonds([]); setFirstAtom(null); setLabFeedback("Pizarra limpia. Construye desde cero."); }
+  function clearLab() { setAtoms([]); setBonds([]); setFirstAtom(null); setTool("bond"); setLabFeedback("Paso 1: añade los átomos. El enlace simple ya está seleccionado."); }
 
   function checkLab() {
     if (!atoms.length) { setLabFeedback("Todavía no hay una molécula que comprobar."); return; }
@@ -300,7 +366,10 @@ export default function Home() {
     if (open) { setLabFeedback(`Al ${open.element} seleccionado todavía le faltan ${valence[open.element] - (bondTotals[open.id] ?? 0)} enlace(s).`); return; }
     if (orders !== targetOrders) { setLabFeedback("Los átomos están, pero revisa si el enlace entre carbonos debe ser simple, doble o triple."); return; }
     setLabFeedback(`✓ ¡${currentTarget.name} correcto! Todas las valencias y enlaces encajan.`);
-    earn(25);
+    if (labReturnQuestion !== null) {
+      if (!solved.includes(labReturnQuestion)) { setSolved((v) => [...v, labReturnQuestion]); earn(25); }
+      setTimeout(() => { setLabReturnQuestion(null); setMode("practice"); nextQuestion(); }, 1600);
+    } else earn(25);
   }
 
   function switchMode(next: Mode) { setMode(next); window.scrollTo({ top: 0, behavior: "smooth" }); }
@@ -387,6 +456,15 @@ export default function Home() {
             <div className="lesson-top"><div><span>{currentModule.eyebrow}</span><h2>{currentModule.title}</h2></div><small>◷ {currentModule.time}</small></div>
             <p className="lesson-intro">{currentModule.intro}</p>
             <div className="principle"><span>IDEA CLAVE</span><p>{currentModule.principle}</p></div>
+            <div className="study-body">
+              <div className="study-label"><span>LECCIÓN {moduleId + 1}</span><b>Desarrollo teórico</b><small>Lee con calma; esto es material de estudio, no un resumen.</small></div>
+              {studySections[moduleId].map((section) => <section className="study-section" key={section.heading}>
+                <h3>{section.heading}</h3>
+                {section.paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
+                {section.worked && <div className="worked-example"><div><span>EJEMPLO RESUELTO</span><b>{section.worked.title}</b></div><Formula text={section.worked.formula}/><ol>{section.worked.steps.map((step, i) => <li key={step}><span>{i + 1}</span><p>{step}</p></li>)}</ol></div>}
+              </section>)}
+            </div>
+            <h3 className="visual-summary-title">Resumen visual de la lección</h3>
             <div className="lesson-columns">
               <div><h3>Lo que vas a dominar</h3><ol>{currentModule.topics.map((t, i) => <li key={t}><span>{i + 1}</span>{t}</li>)}</ol></div>
               <div><h3>Ejemplos que debes leer</h3>{currentModule.examples.map((e) => <div className="example-row" key={e[0]}><Formula text={e[0]}/><div><b>{e[1]}</b><small>{e[2]}</small></div></div>)}</div>
@@ -394,7 +472,7 @@ export default function Home() {
             {moduleId === 4 && <div className="group-map">{functionalGroups.map((g) => <div key={g[0]}><span>{g[0]}</span><b>{g[1]}</b><small>{g[2]}</small></div>)}</div>}
             {moduleId === 1 && <div className="degree-compare"><div><b>¿Cuántos enlaces suma?</b><strong>Valencia</strong><p>Cuenta rayas: — vale 1, = vale 2 y ≡ vale 3.</p></div><span>≠</span><div><b>¿A cuántos C toca?</b><strong>Grado</strong><p>1 C = primario; 2 = secundario; 3 = terciario; 4 = cuaternario.</p></div></div>}
             <div className="coach-tip"><span>!</span><div><b>Error frecuente</b><p>{currentModule.tip}</p></div></div>
-            <div className="lesson-footer"><button className="secondary" onClick={() => switchMode("practice")}>Practicar esta idea</button><button className="primary" onClick={markModule}>{completed.includes(moduleId) ? "Siguiente lección" : "Lo he entendido · +15 XP"} <span>→</span></button></div>
+            <div className="lesson-footer"><button className="secondary" onClick={() => { setLevel(modulePracticeLevel[moduleId]); setQuestionAt(0); setPicked(null); setFeedback(null); switchMode("practice"); }}>Practicar esta lección</button><button className="primary" onClick={markModule}>{completed.includes(moduleId) ? "Siguiente lección" : "Lo he entendido · +15 XP"} <span>→</span></button></div>
           </div>
         </section>
       </>}
@@ -405,29 +483,37 @@ export default function Home() {
         <div className="practice-shell">
           <div className="challenge-card">
             <div className="challenge-meta"><span>NIVEL {level}</span><small>RETO {questionAt + 1} DE {levelQuestions.length}</small></div>
+            <div className="theory-link"><div><span>ESTÁS PRACTICANDO</span><b>Lección {relatedModule.id + 1} · {relatedModule.title}</b></div><button onClick={openRelatedTheory}>Repasar teoría →</button></div>
             <h2>{question.title}</h2><p>{question.prompt}</p><Formula text={question.formula}/>
-            <div className="answers">{question.options.map((option, i) => <button key={option} onClick={() => { setPicked(i); setFeedback(null); }} className={`${picked === i ? "picked" : ""} ${feedback && i === question.answer ? "right" : ""} ${feedback === "wrong" && picked === i ? "wrong" : ""}`}><span>{String.fromCharCode(65 + i)}</span>{option}</button>)}</div>
+            {question.options.length === 1 ? <button className="start-lab-activity" onClick={startLabActivity}><span>🧪</span><div><b>Construir en el laboratorio</b><small>Volverás automáticamente al siguiente reto cuando la molécula sea correcta.</small></div><em>→</em></button> : <div className="answers">{question.options.map((option, i) => <button key={option} onClick={() => { setPicked(i); setFeedback(null); }} className={`${picked === i ? "picked" : ""} ${feedback && i === question.answer ? "right" : ""} ${feedback === "wrong" && picked === i ? "wrong" : ""}`}><span>{String.fromCharCode(65 + i)}</span>{option}</button>)}</div>}
             {feedback && <div className={`feedback ${feedback}`}><span>{feedback === "correct" ? "✓" : "↺"}</span><div><b>{feedback === "correct" ? "Exacto. +20 XP" : "Todavía no. Revisa la cuenta."}</b><p>{question.explain}</p></div></div>}
             {showHint && !feedback && <div className="hint-box">Pista: separa la estructura átomo por átomo y cuenta las rayas que salen de cada uno.</div>}
-            <div className="challenge-actions"><button className="hint" onClick={() => setShowHint(true)}>✦ Dame una pista</button>{feedback === "correct" ? <button className="primary" onClick={nextQuestion}>Siguiente reto →</button> : <button className="primary" disabled={picked === null} onClick={checkAnswer}>Comprobar</button>}</div>
+            {question.options.length > 1 && <div className="challenge-actions"><button className="hint" onClick={() => setShowHint(true)}>✦ Dame una pista</button>{feedback === "correct" ? <button className="primary" onClick={nextQuestion}>{questionAt === levelQuestions.length - 1 && level < levelNames.length ? `Continuar al nivel ${level + 1}` : "Siguiente reto"} →</button> : <button className="primary" disabled={picked === null} onClick={checkAnswer}>Comprobar</button>}</div>}
           </div>
-          <aside className="score-card"><span>PROGRESO DEL NIVEL</span><div className="score-ring" style={{ "--score": `${solved.filter((s) => questions[s].level === level).length / levelQuestions.length * 360}deg` } as React.CSSProperties}><b>{solved.filter((s) => questions[s].level === level).length}/{levelQuestions.length}</b></div><h3>{solved.filter((s) => questions[s].level === level).length === levelQuestions.length ? "¡Nivel dominado!" : "Sigue razonando"}</h3><p>Cada error es una pista sobre qué regla debes revisar.</p><button onClick={() => switchMode("learn")}>Volver a la teoría</button></aside>
+          <aside className="score-card"><span>PROGRESO DEL NIVEL</span><div className="score-ring" style={{ "--score": `${solved.filter((s) => questions[s].level === level).length / levelQuestions.length * 360}deg` } as React.CSSProperties}><b>{solved.filter((s) => questions[s].level === level).length}/{levelQuestions.length}</b></div><h3>{solved.filter((s) => questions[s].level === level).length === levelQuestions.length ? "¡Nivel dominado!" : "Sigue razonando"}</h3><p>Este nivel practica principalmente:</p><strong>{relatedModule.title}</strong><button onClick={openRelatedTheory}>Ver la lección relacionada</button></aside>
         </div>
       </section>}
 
       {mode === "lab" && <section className="lab-page">
-        <div className="page-intro lab-intro"><span className="kicker"><i/> PIZARRA MOLECULAR</span><h1>Construye. Une. Comprueba.</h1><p>Arrastra átomos, crea enlaces y deja que el detector de valencias revise tu razonamiento.</p></div>
-        <div className="target-bar"><div><span>RETO ACTUAL</span><b>{currentTarget.name} <em>{currentTarget.formula}</em></b></div><div className="target-options">{labTargets.map((t, i) => <button className={targetAt === i ? "active" : ""} onClick={() => { setTargetAt(i); clearLab(); }} key={t.name}>{t.formula}</button>)}</div><button className="target-hint" onClick={() => setLabFeedback(`Pista: ${currentTarget.hint}`)}>✦ Pista</button></div>
+        <div className="page-intro lab-intro"><span className="kicker"><i/> PIZARRA MOLECULAR</span><h1>Construye. Une. Comprueba.</h1><p>Añade los átomos y únelos tocando primero uno y después otro. La guía te indica siempre el siguiente paso.</p></div>
+        {labReturnQuestion !== null && <div className="lab-return-banner"><span>ACTIVIDAD DE LA LECCIÓN {questionTheory[labReturnQuestion] + 1}</span><b>Completa {currentTarget.formula}; volverás al siguiente ejercicio automáticamente.</b></div>}
+        <div className="target-bar"><div><span>RETO ACTUAL</span><b>{currentTarget.name} <em>{currentTarget.formula}</em></b></div><div className="target-options">{labTargets.map((t, i) => <button disabled={labReturnQuestion !== null} className={targetAt === i ? "active" : ""} onClick={() => { setTargetAt(i); clearLab(); }} key={t.name}>{t.formula}</button>)}</div><button className="target-hint" onClick={() => setLabFeedback(`Pista: ${currentTarget.hint}`)}>✦ Pista</button></div>
         <div className="lab-shell">
-          <aside className="atom-palette"><span>ÁTOMOS</span>{(["C", "H", "O", "N"] as ElementKey[]).map((e) => <button key={e} draggable onDragStart={(ev) => ev.dataTransfer.setData("element", e)} onClick={() => addAtom(e)} className={`palette-atom atom-${e.toLowerCase()}`}><i>{e}</i><div><b>{e === "C" ? "Carbono" : e === "H" ? "Hidrógeno" : e === "O" ? "Oxígeno" : "Nitrógeno"}</b><small>valencia {valence[e]}</small></div><em>＋</em></button>)}<div className="palette-note"><b>Consejo</b><p>En móvil, toca para añadir. En ordenador, también puedes arrastrar.</p></div></aside>
+          <aside className="atom-palette"><span>PASO 1 · AÑADE ÁTOMOS</span>{(["C", "H", "O", "N"] as ElementKey[]).map((e) => <button key={e} draggable onDragStart={(ev) => ev.dataTransfer.setData("element", e)} onClick={() => addAtom(e)} className={`palette-atom atom-${e.toLowerCase()}`}><i>{e}</i><div><b>{e === "C" ? "Carbono" : e === "H" ? "Hidrógeno" : e === "O" ? "Oxígeno" : "Nitrógeno"}</b><small>toca para añadir · valencia {valence[e]}</small></div><em>＋</em></button>)}<div className="palette-note"><b>No hace falta arrastrar</b><p>Toca C, H, O o N y aparecerá en la pizarra. Después podrás moverlo.</p></div></aside>
           <div className="board-wrap">
+            <div className="lab-steps" aria-label="Pasos para construir una molécula">
+              <div className={labStep >= 1 ? "done" : ""}><span>1</span><p><b>Añade</b><small>los átomos</small></p></div><i>→</i>
+              <div className={labStep >= 2 ? "done" : ""}><span>2</span><p><b>Elige</b><small>tipo de enlace</small></p></div><i>→</i>
+              <div className={labStep >= 3 ? "done current" : ""}><span>3</span><p><b>Toca 2 átomos</b><small>{firstAtom === null ? "primero uno, luego otro" : "ahora toca el segundo"}</small></p></div><i>→</i>
+              <div className={bonds.length ? "done" : ""}><span>4</span><p><b>Comprueba</b><small>la molécula</small></p></div>
+            </div>
             <div className="board-tools">
-              <button className={tool === "move" ? "active" : ""} onClick={() => { setTool("move"); setFirstAtom(null); }}>✥ Mover</button>
-              <div className="bond-tools"><span>ENLACE</span>{([1, 2, 3] as const).map((o) => <button key={o} className={tool === "bond" && bondOrder === o ? "active" : ""} onClick={() => { setTool("bond"); setBondOrder(o); setFirstAtom(null); }}>{o === 1 ? "—" : o === 2 ? "=" : "≡"}</button>)}</div>
+              <div className="bond-tools"><span>PASO 2 · ELIGE EL ENLACE</span>{([1, 2, 3] as const).map((o) => <button key={o} aria-label={`Crear enlace ${o === 1 ? "simple" : o === 2 ? "doble" : "triple"}`} className={tool === "bond" && bondOrder === o ? "active" : ""} onClick={() => { setTool("bond"); setBondOrder(o); setFirstAtom(null); setLabFeedback(`Enlace ${o === 1 ? "simple" : o === 2 ? "doble" : "triple"} activo. Toca el primer átomo y después el segundo.`); }}><b>{o === 1 ? "Simple" : o === 2 ? "Doble" : "Triple"}</b><em>{o === 1 ? "—" : o === 2 ? "=" : "≡"}</em></button>)}</div>
+              <button className={tool === "move" ? "active" : ""} onClick={() => { setTool("move"); setFirstAtom(null); setLabFeedback("Modo mover activo. Arrastra un átomo; después vuelve a elegir un enlace."); }}>✥ Mover</button>
               <button className={tool === "delete" ? "active danger" : ""} onClick={() => { setTool("delete"); setFirstAtom(null); }}>⌫ Borrar</button><button onClick={clearLab}>Limpiar todo</button>
             </div>
-            <div className="molecule-board" ref={canvasRef} onDragOver={(e) => e.preventDefault()} onDrop={onDrop} onClick={() => setFirstAtom(null)}>
-              <div className="board-watermark"><span>LAB // 01</span><b>{atoms.length ? "ANALIZANDO ESTRUCTURA" : "ARRASTRA ÁTOMOS AQUÍ"}</b></div>
+            <div className="molecule-board" ref={canvasRef} onDragOver={(e) => e.preventDefault()} onDrop={onDrop}>
+              <div className="board-watermark"><span>LAB // 01</span><b>{atoms.length ? firstAtom !== null ? "PRIMER ÁTOMO ELEGIDO · TOCA EL SEGUNDO" : "TOCA DOS ÁTOMOS PARA UNIRLOS" : "TOCA UN ÁTOMO DE LA PALETA"}</b></div>
               {bonds.map((bond) => {
                 const a = atoms.find((x) => x.id === bond.a); const b = atoms.find((x) => x.id === bond.b); if (!a || !b) return null;
                 const dx = b.x - a.x, dy = b.y - a.y, length = Math.sqrt(dx * dx + dy * dy), angle = Math.atan2(dy, dx) * 180 / Math.PI;
