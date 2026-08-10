@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import NomenclaturePuzzle from "./NomenclaturePuzzle";
 
 type Family = "Alcanos" | "Alquenos" | "Alquinos" | "Alcoholes" | "Aldehídos" | "Cetonas" | "Ácidos" | "Ramificados";
 type Direction = "name-formula" | "formula-name";
@@ -70,6 +71,7 @@ type Stats = Record<Family, { right: number; wrong: number }>;
 const emptyStats = () => Object.fromEntries(families.map((f) => [f, { right: 0, wrong: 0 }])) as Stats;
 
 export default function NomenclatureTrainer({ onEarn, onAsk }: { onEarn: (amount: number) => void; onAsk: (text: string) => void }) {
+  const [activity, setActivity] = useState<"trainer" | "puzzle">("trainer");
   const [difficulty, setDifficulty] = useState<"all" | Difficulty>(1);
   const [family, setFamily] = useState<"Todas" | Family>("Todas");
   const [direction, setDirection] = useState<"mixed" | Direction>("mixed");
@@ -150,7 +152,12 @@ export default function NomenclatureTrainer({ onEarn, onAsk }: { onEarn: (amount
       <p>Entrena en las dos direcciones, vuelve a cualquier ejercicio y concentra la práctica en las familias que más te cuestan.</p>
     </div>
 
-    <div className="trainer-shell">
+    <div className="nomenclature-activity-tabs" aria-label="Actividades de nomenclatura">
+      <button className={activity === "trainer" ? "active" : ""} onClick={() => setActivity("trainer")}><span>01</span><div><b>Entrenador guiado</b><small>Elegir la respuesta y analizar errores</small></div></button>
+      <button className={activity === "puzzle" ? "active" : ""} onClick={() => setActivity("puzzle")}><span>02</span><div><b>Puzle de piezas</b><small>Construir fórmulas paso a paso</small></div></button>
+    </div>
+
+    {activity === "trainer" ? <div className="trainer-shell">
       <aside className="trainer-controls">
         <div className="trainer-filter">
           <span>DIFICULTAD</span>
@@ -215,6 +222,6 @@ export default function NomenclatureTrainer({ onEarn, onAsk }: { onEarn: (amount
         {weakest && <button onClick={practiceWeakest}>Practicar mi punto débil →</button>}
         <p><i className="score-dot failed"/> Error registrado <i className="score-dot mastered"/> Dominado</p>
       </aside>
-    </div>
+    </div> : <NomenclaturePuzzle onEarn={onEarn} onAsk={onAsk}/>}
   </section>;
 }
