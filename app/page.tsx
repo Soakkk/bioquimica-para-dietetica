@@ -1,11 +1,12 @@
 "use client";
 
 import { DragEvent, PointerEvent, useEffect, useMemo, useRef, useState } from "react";
+import NomenclatureTrainer from "./NomenclatureTrainer";
 
 type ElementKey = "C" | "H" | "O" | "N";
 type Atom = { id: number; element: ElementKey; x: number; y: number };
 type Bond = { id: number; a: number; b: number; order: 1 | 2 | 3 };
-type Mode = "learn" | "practice" | "lab";
+type Mode = "learn" | "practice" | "nomenclature" | "lab";
 
 const valence: Record<ElementKey, number> = { C: 4, H: 1, O: 2, N: 3 };
 
@@ -382,6 +383,7 @@ export default function Home() {
     if (/ch3|metilo/.test(q)) return "CH₃ tiene tres enlaces C—H, pero puede tener un cuarto enlace que aparece fuera del grupo. En CH₃—CH₃, la raya entre ambos carbonos completa la cuenta: 3 + 1 = 4. CH₃ aislado no representa el etano completo.";
     if (/primario|secundario|terciario|cuaternario|grado del carbono/.test(q)) return "Aquí no cuentas todas las rayas: cuentas únicamente cuántos carbonos tocan directamente al carbono estudiado. 1 vecino C = primario; 2 = secundario; 3 = terciario; 4 = cuaternario.";
     if (/alcano|alqueno|alquino/.test(q)) return "Mira el enlace entre carbonos: alcano solo tiene simples (-ano), alqueno contiene al menos un doble (-eno) y alquino al menos un triple (-ino). Para 2 carbonos: etano CH₃—CH₃, eteno CH₂=CH₂ y etino HC≡CH.";
+    if (/nomenclatura|prefijo|sufijo|localizador|como se nombra|nombre de/.test(q)) return "Separa el nombre en piezas: 1) el prefijo indica la longitud de la cadena (met-, et-, prop-, but-, pent-), 2) el número localiza el enlace o grupo y 3) el sufijo identifica la familia (-ano, -eno, -ino, -ol, -al, -ona, -oico). Después dibuja el esqueleto y completa la tetravalencia del carbono.";
     if (/alcohol|fenol|eter/.test(q)) return "Los tres contienen O, pero conectado de forma diferente: alcohol R—OH; fenol, un —OH unido directamente a un anillo aromático; éter R—O—R′. Busca primero qué hay a cada lado del oxígeno.";
     if (/aldehido|cetona/.test(q)) return "Ambos contienen C=O. Si el carbonilo está al final y aparece como —CHO, es aldehído. Si está entre dos carbonos, R—CO—R′, es cetona.";
     if (/acido|ester|carbox/.test(q)) return "El ácido carboxílico contiene —C(=O)—OH. En un éster, el H del —OH se sustituye por otro grupo carbonado: —C(=O)—O—R′. Esa pequeña diferencia cambia la familia.";
@@ -408,7 +410,8 @@ export default function Home() {
         <nav aria-label="Secciones principales">
           <button className={mode === "learn" ? "active" : ""} onClick={() => switchMode("learn")}><span>01</span> Aprender</button>
           <button className={mode === "practice" ? "active" : ""} onClick={() => switchMode("practice")}><span>02</span> Practicar</button>
-          <button className={mode === "lab" ? "active" : ""} onClick={() => switchMode("lab")}><span>03</span> Laboratorio</button>
+          <button className={mode === "nomenclature" ? "active" : ""} onClick={() => switchMode("nomenclature")}><span>03</span> Nomenclatura</button>
+          <button className={mode === "lab" ? "active" : ""} onClick={() => switchMode("lab")}><span>04</span> Laboratorio</button>
         </nav>
         <div className="xp"><span>✦</span><b>{xp} XP</b><small>{courseProgress}% completado</small></div>
       </header>
@@ -494,6 +497,8 @@ export default function Home() {
         </div>
       </section>}
 
+      {mode === "nomenclature" && <NomenclatureTrainer onEarn={earn} onAsk={askTutor}/>}
+
       {mode === "lab" && <section className="lab-page">
         <div className="page-intro lab-intro"><span className="kicker"><i/> PIZARRA MOLECULAR</span><h1>Construye. Une. Comprueba.</h1><p>Añade los átomos y únelos tocando primero uno y después otro. La guía te indica siempre el siguiente paso.</p></div>
         {labReturnQuestion !== null && <div className="lab-return-banner"><span>ACTIVIDAD DE LA LECCIÓN {questionTheory[labReturnQuestion] + 1}</span><b>Completa {currentTarget.formula}; volverás al siguiente ejercicio automáticamente.</b></div>}
@@ -530,7 +535,7 @@ export default function Home() {
       <button className="tutor-launch" onClick={() => setTutorOpen((v) => !v)} aria-label="Abrir tutor de química"><span>?</span><div><b>Pregunta al tutor</b><small>Te lo explico paso a paso</small></div></button>
       {tutorOpen && <aside className="tutor-panel" aria-label="Tutor de química">
         <div className="tutor-head"><div><span>?</span><div><b>Tutor del carbono</b><small>Guía socrática · en español</small></div></div><button onClick={() => setTutorOpen(false)} aria-label="Cerrar tutor">×</button></div>
-        <div className="tutor-context">Ahora estás en: <b>{mode === "learn" ? currentModule.title : mode === "practice" ? `Nivel ${level}: ${levelNames[level - 1]}` : `Laboratorio · ${currentTarget.name}`}</b></div>
+        <div className="tutor-context">Ahora estás en: <b>{mode === "learn" ? currentModule.title : mode === "practice" ? `Nivel ${level}: ${levelNames[level - 1]}` : mode === "nomenclature" ? "Gimnasio de nomenclatura" : `Laboratorio · ${currentTarget.name}`}</b></div>
         <div className="tutor-chat">{tutorMessages.map((m, i) => <div className={`tutor-message ${m.role}`} key={i}><span>{m.role === "tutor" ? "C" : "Tú"}</span><p>{m.text}</p></div>)}</div>
         <div className="tutor-chips"><button onClick={() => askTutor("¿Por qué el carbono hace 4 enlaces?")}>¿Por qué C hace 4?</button><button onClick={() => askTutor("Diferencia entre amina y amida")}>Amina vs. amida</button></div>
         <form className="tutor-form" onSubmit={(e) => { e.preventDefault(); askTutor(); }}><input value={tutorInput} onChange={(e) => setTutorInput(e.target.value)} placeholder="Escribe tu duda o una fórmula…" aria-label="Pregunta para el tutor"/><button type="submit">→</button></form>
