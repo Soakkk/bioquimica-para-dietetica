@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import NomenclaturePuzzle from "./NomenclaturePuzzle";
+import ChainBranchLesson from "./ChainBranchLesson";
 
 type Family = "Alcanos" | "Alquenos" | "Alquinos" | "Alcoholes" | "Aldehídos" | "Cetonas" | "Ácidos" | "Ramificados";
 type Direction = "name-formula" | "formula-name";
@@ -71,7 +72,7 @@ type Stats = Record<Family, { right: number; wrong: number }>;
 const emptyStats = () => Object.fromEntries(families.map((f) => [f, { right: 0, wrong: 0 }])) as Stats;
 
 export default function NomenclatureTrainer({ onEarn, onAsk }: { onEarn: (amount: number) => void; onAsk: (text: string) => void }) {
-  const [activity, setActivity] = useState<"trainer" | "puzzle">("trainer");
+  const [activity, setActivity] = useState<"branches" | "trainer" | "puzzle">("branches");
   const [difficulty, setDifficulty] = useState<"all" | Difficulty>(1);
   const [family, setFamily] = useState<"Todas" | Family>("Todas");
   const [direction, setDirection] = useState<"mixed" | Direction>("mixed");
@@ -153,11 +154,12 @@ export default function NomenclatureTrainer({ onEarn, onAsk }: { onEarn: (amount
     </div>
 
     <div className="nomenclature-activity-tabs" aria-label="Actividades de nomenclatura">
-      <button className={activity === "trainer" ? "active" : ""} onClick={() => setActivity("trainer")}><span>01</span><div><b>Entrenador guiado</b><small>Elegir la respuesta y analizar errores</small></div></button>
-      <button className={activity === "puzzle" ? "active" : ""} onClick={() => setActivity("puzzle")}><span>02</span><div><b>Puzle de piezas</b><small>Construir fórmulas paso a paso</small></div></button>
+      <button className={activity === "branches" ? "active" : ""} onClick={() => setActivity("branches")}><span>01</span><div><b>Cadena y ramas</b><small>Comprender antes de nombrar</small></div></button>
+      <button className={activity === "trainer" ? "active" : ""} onClick={() => setActivity("trainer")}><span>02</span><div><b>Entrenador guiado</b><small>Elegir la respuesta y analizar errores</small></div></button>
+      <button className={activity === "puzzle" ? "active" : ""} onClick={() => setActivity("puzzle")}><span>03</span><div><b>Puzle de piezas</b><small>Construir fórmulas paso a paso</small></div></button>
     </div>
 
-    {activity === "trainer" ? <div className="trainer-shell">
+    {activity === "branches" ? <ChainBranchLesson onEarn={onEarn} onAsk={onAsk}/> : activity === "trainer" ? <div className="trainer-shell">
       <aside className="trainer-controls">
         <div className="trainer-filter">
           <span>DIFICULTAD</span>
