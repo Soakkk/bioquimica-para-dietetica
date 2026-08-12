@@ -134,14 +134,17 @@ export default function ChainBranchLesson({ onEarn, onAsk }: { onEarn: (amount: 
   const current = exercises[index];
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem("carbon-chain-branch-v1");
-      if (raw) {
-        const data = JSON.parse(raw);
-        setCompleted(data.completed ?? []);
-        setAutoNext(data.autoNext ?? true);
-      }
-    } catch { /* El entrenamiento sigue funcionando sin progreso guardado. */ }
+    const loadTimer = window.setTimeout(() => {
+      try {
+        const raw = localStorage.getItem("carbon-chain-branch-v1");
+        if (raw) {
+          const data = JSON.parse(raw);
+          setCompleted(data.completed ?? []);
+          setAutoNext(data.autoNext ?? true);
+        }
+      } catch { /* El entrenamiento sigue funcionando sin progreso guardado. */ }
+    }, 0);
+    return () => window.clearTimeout(loadTimer);
   }, []);
 
   useEffect(() => {

@@ -2,6 +2,7 @@
 
 import { DragEvent, PointerEvent, useEffect, useMemo, useRef, useState } from "react";
 import NomenclatureTrainer from "./NomenclatureTrainer";
+import IntegratedReview from "./IntegratedReview";
 
 type ElementKey = "C" | "H" | "O" | "N";
 type Atom = { id: number; element: ElementKey; x: number; y: number };
@@ -232,6 +233,7 @@ export default function Home() {
   const [level, setLevel] = useState(1);
   const [questionAt, setQuestionAt] = useState(0);
   const [practiceModuleFilter, setPracticeModuleFilter] = useState<number | null>(null);
+  const [practiceView, setPracticeView] = useState<"routes" | "free">("routes");
   const [picked, setPicked] = useState<number | null>(null);
   const [feedback, setFeedback] = useState<"correct" | "wrong" | null>(null);
   const [showHint, setShowHint] = useState(false);
@@ -441,7 +443,7 @@ export default function Home() {
         </button>
         <nav aria-label="Secciones principales">
           <button className={mode === "learn" ? "active" : ""} onClick={() => switchMode("learn")}><span>01</span> Aprender</button>
-          <button className={mode === "practice" ? "active" : ""} onClick={() => { setPracticeModuleFilter(null); setQuestionAt(0); switchMode("practice"); }}><span>02</span> Practicar</button>
+          <button className={mode === "practice" ? "active" : ""} onClick={() => { setPracticeModuleFilter(null); setPracticeView("routes"); setQuestionAt(0); switchMode("practice"); }}><span>02</span> Repasar</button>
           <button className={mode === "nomenclature" ? "active" : ""} onClick={() => switchMode("nomenclature")}><span>03</span> Nomenclatura</button>
           <button className={mode === "lab" ? "active" : ""} onClick={() => switchMode("lab")}><span>04</span> Laboratorio</button>
         </nav>
@@ -507,13 +509,15 @@ export default function Home() {
             {moduleId === 4 && <div className="group-map">{functionalGroups.map((g) => <div key={g[0]}><span>{g[0]}</span><b>{g[1]}</b><small>{g[2]}</small></div>)}</div>}
             {moduleId === 1 && <div className="degree-compare"><div><b>¿Cuántos enlaces suma?</b><strong>Valencia</strong><p>Cuenta rayas: — vale 1, = vale 2 y ≡ vale 3.</p></div><span>≠</span><div><b>¿A cuántos C toca?</b><strong>Grado</strong><p>1 C = primario; 2 = secundario; 3 = terciario; 4 = cuaternario.</p></div></div>}
             <div className="coach-tip"><span>!</span><div><b>Error frecuente</b><p>{currentModule.tip}</p></div></div>
-            <div className="lesson-footer"><button className="secondary" onClick={() => { setPracticeModuleFilter(moduleId); setQuestionAt(0); setPicked(null); setFeedback(null); setShowHint(false); switchMode("practice"); }}>Practicar solo esta lección</button><button className="primary" onClick={markModule}>{completed.includes(moduleId) ? "Siguiente lección" : "Lo he entendido · +15 XP"} <span>→</span></button></div>
+            <div className="lesson-footer"><button className="secondary" onClick={() => { setPracticeModuleFilter(moduleId); setPracticeView("free"); setQuestionAt(0); setPicked(null); setFeedback(null); setShowHint(false); switchMode("practice"); }}>Practicar solo esta lección</button><button className="primary" onClick={markModule}>{completed.includes(moduleId) ? "Siguiente lección" : "Lo he entendido · +15 XP"} <span>→</span></button></div>
           </div>
         </section>
       </>}
 
       {mode === "practice" && <section className="practice-page">
-        <div className="page-intro"><span className="kicker"><i/> {practiceModuleFilter !== null ? "PRÁCTICA RELACIONADA CON LA TEORÍA" : "ENTRENAMIENTO ADAPTATIVO"}</span><h1>{practiceModuleFilter !== null ? <>Afianza la<br/><em>lección {practiceModuleFilter + 1}.</em></> : "Piensa como un químico."}</h1><p>{practiceModuleFilter !== null ? `Estos ejercicios trabajan únicamente “${modules[practiceModuleFilter].title}”, siguiendo el mismo orden de ideas y ejemplos.` : "No basta con acertar: después de cada respuesta verás la regla que permite deducirla."}</p></div>
+        <div className="page-intro"><span className="kicker"><i/> {practiceModuleFilter !== null ? "PRÁCTICA RELACIONADA CON LA TEORÍA" : practiceView === "routes" ? "REPASO TEÓRICO Y PRÁCTICO" : "ENTRENAMIENTO ADAPTATIVO"}</span><h1>{practiceModuleFilter !== null ? <>Afianza la<br/><em>lección {practiceModuleFilter + 1}.</em></> : practiceView === "routes" ? <>Relaciona.<br/><em>Aplica. Recuerda.</em></> : "Piensa como un químico."}</h1><p>{practiceModuleFilter !== null ? `Estos ejercicios trabajan únicamente “${modules[practiceModuleFilter].title}”, siguiendo el mismo orden de ideas y ejemplos.` : practiceView === "routes" ? "Repasa grupos de temas que dependen unos de otros y descubre exactamente qué conexión necesitas reforzar." : "No basta con acertar: después de cada respuesta verás la regla que permite deducirla."}</p></div>
+        {practiceModuleFilter === null && <div className="practice-view-tabs"><button className={practiceView === "routes" ? "active" : ""} onClick={() => setPracticeView("routes")}><span>01</span><div><b>Repaso por bloques</b><small>Teoría conectada + diagnóstico</small></div></button><button className={practiceView === "free" ? "active" : ""} onClick={() => setPracticeView("free")}><span>02</span><div><b>Ejercicios por nivel</b><small>Práctica rápida y libre</small></div></button></div>}
+        {practiceModuleFilter === null && practiceView === "routes" ? <IntegratedReview onEarn={earn} onAsk={askTutor}/> : <>
         {practiceModuleFilter !== null && <div className="lesson-practice-route"><span>1 · TEORÍA LEÍDA</span><i>→</i><span>2 · EJEMPLOS RESUELTOS</span><i>→</i><b>3 · PRÁCTICA DE LA LECCIÓN</b><button onClick={() => { setModuleId(practiceModuleFilter); setMode("learn"); setTimeout(() => document.getElementById("guide")?.scrollIntoView({ behavior: "smooth" }), 50); }}>← Volver a la teoría</button></div>}
         <div className="level-tabs">{levelNames.map((name, i) => <button key={name} className={practiceModuleFilter === null && level === i + 1 ? "active" : ""} onClick={() => { setPracticeModuleFilter(null); setLevel(i + 1); setQuestionAt(0); setPicked(null); setFeedback(null); setShowHint(false); }}><span>{i + 1}</span><b>{name}</b><small>{questions.filter((q) => q.level === i + 1).length} retos</small></button>)}</div>
         <div className="practice-shell">
@@ -528,6 +532,7 @@ export default function Home() {
           </div>
           <aside className="score-card"><span>{practiceModuleFilter !== null ? "PROGRESO DE LA LECCIÓN" : "PROGRESO DEL NIVEL"}</span><div className="score-ring" style={{ "--score": `${solvedInCurrentPractice / levelQuestions.length * 360}deg` } as React.CSSProperties}><b>{solvedInCurrentPractice}/{levelQuestions.length}</b></div><h3>{solvedInCurrentPractice === levelQuestions.length ? "¡Contenido afianzado!" : "Sigue razonando"}</h3><p>Este ejercicio corresponde a:</p><strong>{relatedModule.title}</strong><button onClick={openRelatedTheory}>Ver la explicación relacionada</button></aside>
         </div>
+        </>}
       </section>}
 
       {mode === "nomenclature" && <NomenclatureTrainer onEarn={earn} onAsk={askTutor}/>}
