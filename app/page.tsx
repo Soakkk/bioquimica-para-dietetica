@@ -3,6 +3,7 @@
 import { DragEvent, PointerEvent, useEffect, useMemo, useRef, useState } from "react";
 import NomenclatureTrainer from "./NomenclatureTrainer";
 import IntegratedReview from "./IntegratedReview";
+import CourseDepth from "./CourseDepth";
 
 type ElementKey = "C" | "H" | "O" | "N";
 type Atom = { id: number; element: ElementKey; x: number; y: number };
@@ -46,10 +47,10 @@ const modules = [
     id: 2,
     eyebrow: "Caja de herramientas",
     title: "Cómo formular y nombrar",
-    time: "25 min",
-    intro: "Aprende un método fijo para pasar de un nombre a una estructura y volver sin adivinar.",
-    principle: "Busca la cadena principal, numérala desde el extremo que dé los números más bajos y comprueba todas las valencias al final.",
-    topics: ["met-, et-, prop-, but-…", "Cadena principal", "Sustituyentes metil y etil", "Prefijos di-, tri- y tetra-"],
+    time: "45–60 min",
+    intro: "Aprende un método acumulativo para pasar de nombres sencillos y ramificados a estructuras con varias insaturaciones.",
+    principle: "Interpreta el nombre como instrucciones: elige la cadena correcta, coloca localizadores e insaturaciones, añade sustituyentes y audita todas las valencias.",
+    topics: ["Gramática y puntuación IUPAC", "Cadena principal y sustituyentes", "Numeración y orden alfabético", "Dobles y triples múltiples", "Auditoría de la fórmula"],
     examples: [
       ["propano", "prop- = 3 carbonos; -ano = simples", "CH₃—CH₂—CH₃"],
       ["propeno", "3 carbonos y un doble enlace", "CH₂=CH—CH₃"],
@@ -61,10 +62,10 @@ const modules = [
     id: 3,
     eyebrow: "Familias de C e H",
     title: "Hidrocarburos",
-    time: "35 min",
-    intro: "Compara alcanos, alquenos, alquinos, ciclos y aromáticos a partir de su estructura.",
-    principle: "Más insaturaciones significa menos hidrógenos: cada doble enlace o anillo resta H₂; cada triple enlace resta dos H₂.",
-    topics: ["Alcanos", "Alquenos", "Alquinos", "Cicloalcanos", "Aromáticos y heterociclos"],
+    time: "60–75 min",
+    intro: "Clasifica y compara cadenas abiertas, ciclos, alcanos, alquenos, alquinos y aromáticos, con la profundidad útil para Dietética.",
+    principle: "Primero decide composición y forma de la cadena; después analiza saturación, número de insaturaciones, fórmula general y nomenclatura.",
+    topics: ["Cadena abierta y cerrada", "Alcanos lineales y ramificados", "Alquenos, dienos y cis/trans", "Alquinos y enlaces múltiples", "Cicloalcanos y aromáticos", "Reconocimiento de heterociclos"],
     examples: [
       ["CₙH₂ₙ₊₂", "Alcano abierto", "etano: C₂H₆"],
       ["CₙH₂ₙ", "Un doble enlace o un ciclo", "eteno: C₂H₄"],
@@ -171,7 +172,10 @@ const studySections: Record<number, { heading: string; paragraphs: string[]; wor
   ],
 };
 
-const questionTheory = [1, 1, 1, 1, 1, 3, 2, 0, 1, 1, 4, 4, 2, 2, 2, 4, 4, 4, 4, 6, 6, 6, 6, 0, 0, 0, 3, 3, 3, 5, 5, 5, 5];
+const questionTheory = [1, 1, 1, 1, 1, 3, 2, 0, 1, 1, 4, 4, 2, 2, 2, 4, 4, 4, 4, 6, 6, 6, 6, 0, 0, 0, 3, 3, 3, 5, 5, 5, 5,
+  2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+  3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+];
 
 const questions = [
   { level: 1, title: "Detective de enlaces", prompt: "En CH₂=CH₂, ¿cuántos pares de electrones comparten los dos carbonos?", formula: "CH₂ = CH₂", options: ["1 par", "2 pares", "4 pares"], answer: 1, explain: "El signo = representa dos enlaces: son 2 pares, es decir, 4 electrones compartidos." },
@@ -207,6 +211,35 @@ const questions = [
   { level: 4, title: "Isomería de posición", prompt: "Propan-1-ol y propan-2-ol se diferencian en…", formula: "CH₃—CH₂—CH₂OH / CH₃—CH(OH)—CH₃", options: ["El número de carbonos", "La posición del OH", "La familia química"], answer: 1, explain: "Ambos son alcoholes C₃H₈O; cambia únicamente la posición del grupo OH." },
   { level: 4, title: "Isomería de función", prompt: "Etanol y dimetil éter comparten C₂H₆O, pero pertenecen a familias diferentes. Son isómeros de…", formula: "CH₃—CH₂—OH / CH₃—O—CH₃", options: ["Cadena", "Posición", "Función"], answer: 2, explain: "La misma fórmula corresponde a un alcohol y un éter: isomería de función." },
   { level: 4, title: "Comprobación de isómeros", prompt: "¿Cuál es el primer paso antes de afirmar que dos estructuras son isómeras?", formula: "¿misma fórmula molecular?", options: ["Comparar sus nombres", "Contar todos los átomos", "Buscar siempre un doble enlace"], answer: 1, explain: "Los isómeros deben tener exactamente la misma cantidad de cada elemento; primero se comprueba la fórmula molecular." },
+
+  { level: 4, title: "Desmonta el nombre", prompt: "¿Qué información contiene 3-etil-2-metilhexano?", formula: "localizadores + sustituyentes + cadena", options: ["Hexano con etil en C3 y metil en C2", "Pentano con dos ramas etil", "Hexeno con un doble enlace en C3"], answer: 0, explain: "Hexano indica una cadena principal de 6 C; 3-etil y 2-metil indican qué ramas hay y dónde se conectan." },
+  { level: 4, title: "Cadena principal", prompt: "La fila inferior parece tener 4 C, pero existe un camino continuo superior→centro→derecha con 5 C. ¿Cuál eliges?", formula: "       CH₂—CH₃\n        |\nCH₃—CH—CH₂—CH₃", options: ["La horizontal de 4 C", "El recorrido continuo de 5 C", "Los 6 C formando una bifurcación"], answer: 1, explain: "La cadena puede girar, pero no bifurcarse. El recorrido de 5 C es la cadena principal; el CH₃ restante será sustituyente." },
+  { level: 4, title: "Rama o sustituyente", prompt: "¿Cómo se llama una rama formada por —CH₂—CH₃?", formula: "cadena principal—CH₂—CH₃", options: ["Metil", "Etil", "Propil"], answer: 1, explain: "Una rama de dos carbonos procede del etano al perder un H y se llama etil." },
+  { level: 4, title: "Número más bajo", prompt: "Una rama puede quedar en C2 numerando desde la derecha o en C5 desde la izquierda. ¿Qué localizador se usa?", formula: "2 ↔ 5", options: ["2", "5", "Se elige cualquiera"], answer: 0, explain: "Se numera desde el extremo que proporcione el localizador más bajo: C2." },
+  { level: 4, title: "Puntuación del nombre", prompt: "¿Cuál está escrito correctamente?", formula: "dos metilos en C2 y C4", options: ["2 4 dimetil hexano", "2,4-dimetilhexano", "2-4, dimetil-hexano"], answer: 1, explain: "Los números se separan con comas; números y palabras, con guiones; el nombre se escribe sin espacios." },
+  { level: 4, title: "Detecta una errata", prompt: "¿Qué problema tiene el nombre «2-dimetilbutano» del listado?", formula: "di- = dos ramas", options: ["Butano no existe", "Falta un localizador para la segunda rama", "El prefijo di- significa doble enlace"], answer: 1, explain: "Si hay dos metilos deben aparecer dos localizadores, incluso si coinciden: por ejemplo, 2,2-dimetilbutano." },
+  { level: 4, title: "Formula un alquino", prompt: "¿Qué fórmula corresponde a pent-2-ino?", formula: "5 C · C≡C desde C2", options: ["CH₃—C≡C—CH₂—CH₃", "HC≡C—CH₂—CH₂—CH₃", "CH₃—CH=CH—CH₂—CH₃"], answer: 0, explain: "La cadena tiene 5 C y el triple enlace está entre C2 y C3: CH₃—C≡C—CH₂—CH₃." },
+  { level: 4, title: "Dos dobles enlaces", prompt: "¿Qué fórmula corresponde a hepta-2,5-dieno?", formula: "7 C · C2=C3 · C5=C6", options: ["CH₃—CH=CH—CH₂—CH=CH—CH₃", "CH₂=CH—CH₂—CH₂—CH₂—CH=CH₂", "CH₃—C≡C—CH₂—C≡C—CH₃"], answer: 0, explain: "Los dobles enlaces comienzan en C2 y C5 dentro de una cadena de 7 carbonos." },
+  { level: 4, title: "Tres triples enlaces", prompt: "¿Qué estructura representa nona-2,4,6-triino?", formula: "9 C · triples en 2, 4 y 6", options: ["CH₃—C≡C—C≡C—C≡C—CH₂—CH₃", "HC≡C—CH₂—C≡C—CH₂—C≡CH", "CH₃—CH=CH—CH=CH—CH=CH—CH₂—CH₃"], answer: 0, explain: "La cadena tiene 9 C; los triples se sitúan entre C2–C3, C4–C5 y C6–C7." },
+  { level: 4, title: "Cadena más larga", prompt: "¿Por qué 2-etilbutano no es el nombre correcto de esa conectividad?", formula: "una cadena aparente de 4 C + etil", options: ["Porque etil no existe", "Porque se puede trazar una cadena continua de 5 C", "Porque las ramas siempre deben ser metil"], answer: 1, explain: "La parte del supuesto etil entra en el recorrido más largo. La estructura se nombra como 3-metilpentano." },
+  { level: 4, title: "Orden alfabético", prompt: "¿Cuál es el orden correcto al citar una rama etil y otra metil?", formula: "C3: etil · C2: metil · cadena: hexano", options: ["2-metil-3-etilhexano", "3-etil-2-metilhexano", "3-etil-2-dimetilhexano"], answer: 1, explain: "Etil se cita antes que metil por orden alfabético: 3-etil-2-metilhexano." },
+  { level: 4, title: "Auditoría de valencias", prompt: "¿Por qué CH₃=CH₃ es imposible para el alqueno neutro habitual?", formula: "CH₃=CH₃", options: ["Cada C sumaría 5 enlaces", "Cada C solo sumaría 3", "El H puede formar dos enlaces"], answer: 0, explain: "Cada C tendría 3 enlaces C—H más 2 del C=C: total 5. La estructura correcta es CH₂=CH₂." },
+
+  { level: 1, title: "Definición de hidrocarburo", prompt: "¿Cuál de estas sustancias es un hidrocarburo?", formula: "composición", options: ["C₂H₆", "C₂H₆O", "CH₃NH₂"], answer: 0, explain: "Un hidrocarburo contiene exclusivamente C e H; C₂H₆ es etano." },
+  { level: 1, title: "Mapa de clasificación", prompt: "¿Qué grupo pertenece a los hidrocarburos de cadena abierta?", formula: "cadena abierta", options: ["Alcanos, alquenos y alquinos", "Solo cicloalcanos", "Heterociclos con N"], answer: 0, explain: "Los alcanos, alquenos y alquinos pueden formar cadenas abiertas; se distinguen por sus enlaces C—C." },
+  { level: 1, title: "Fórmula de alcanos", prompt: "¿Qué fórmula general corresponde a un alcano acíclico?", formula: "cadena abierta · enlaces simples", options: ["CₙH₂ₙ₊₂", "CₙH₂ₙ", "CₙH₂ₙ₋₂"], answer: 0, explain: "Un alcano abierto y saturado sigue CₙH₂ₙ₊₂." },
+  { level: 4, title: "Cuenta una fórmula condensada", prompt: "¿Cuántos carbonos contiene CH₃—(CH₂)₆—CH₃?", formula: "CH₃—(CH₂)₆—CH₃", options: ["6", "8", "10"], answer: 1, explain: "Cuenta los dos CH₃ terminales y los seis CH₂: 1 + 6 + 1 = 8, octano." },
+  { level: 1, title: "Alqueno sencillo", prompt: "Un alqueno acíclico con un solo doble enlace suele seguir…", formula: "un C=C · sin anillos", options: ["CₙH₂ₙ₊₂", "CₙH₂ₙ", "CₙH₂ₙ₋₄"], answer: 1, explain: "Un doble enlace resta H₂ respecto al alcano: CₙH₂ₙ." },
+  { level: 4, title: "Varios dobles enlaces", prompt: "¿Qué indica el sufijo -dieno?", formula: "hexa-2,4-dieno", options: ["Dos dobles enlaces", "Dos triples enlaces", "Un anillo de seis C"], answer: 0, explain: "di- cuenta dos y -eno identifica dobles enlaces; deben aparecer dos localizadores." },
+  { level: 4, title: "Dobles conjugados", prompt: "¿Cuál muestra dos dobles enlaces conjugados?", formula: "alternancia doble–simple–doble", options: ["C=C—C=C", "C=C—C—C=C", "C=C=C"], answer: 0, explain: "En un sistema conjugado los dobles enlaces están separados por un único enlace simple." },
+  { level: 6, title: "Poliinsaturadas en nutrición", prompt: "¿Qué afirmación es más correcta sobre muchos ácidos grasos poliinsaturados habituales?", formula: "linoleico · α-linolénico", options: ["Todos sus dobles enlaces son conjugados", "Con frecuencia están separados por un CH₂", "Siempre contienen un triple enlace"], answer: 1, explain: "En muchos PUFA naturales los dobles enlaces están separados por un grupo metileno; los conjugados son casos específicos." },
+  { level: 2, title: "Hidrógeno en un alquino terminal", prompt: "En HC≡C—CH₃, ¿por qué el primer carbono solo lleva un H?", formula: "H—C≡C—", options: ["El triple ya aporta 3 enlaces", "El carbono solo admite 2 enlaces", "El H forma un triple enlace"], answer: 0, explain: "El C≡C ocupa tres valencias; solo queda una para enlazarse con H." },
+  { level: 1, title: "Cicloalcano", prompt: "¿Qué fórmula molecular tiene el ciclopentano?", formula: "anillo saturado de 5 C", options: ["C₅H₁₂", "C₅H₁₀", "C₅H₈"], answer: 1, explain: "Un cicloalcano monocíclico saturado sigue CₙH₂ₙ: C₅H₁₀." },
+  { level: 4, title: "Una fórmula, dos posibilidades", prompt: "C₅H₁₀ podría corresponder a…", formula: "CₙH₂ₙ", options: ["Solo penteno", "Un penteno o un ciclopentano", "Solo pentano"], answer: 1, explain: "La fórmula CₙH₂ₙ puede deberse a un doble enlace o a un anillo; necesitamos conocer la estructura." },
+  { level: 1, title: "Benceno", prompt: "¿Qué fórmula corresponde al benceno?", formula: "anillo aromático", options: ["C₆H₆", "C₆H₁₂", "C₆H₁₄"], answer: 0, explain: "El benceno tiene fórmula C₆H₆ y electrones π deslocalizados." },
+  { level: 1, title: "Qué significa aromático", prompt: "En química, que un compuesto sea aromático significa principalmente que…", formula: "anillo aromático", options: ["Siempre tiene olor agradable", "Posee un sistema electrónico cíclico deslocalizado", "Contiene obligatoriamente oxígeno"], answer: 1, explain: "Aromático es una categoría estructural y electrónica; no es una descripción del olor." },
+  { level: 6, title: "Heterociclos", prompt: "¿Por qué la pirimidina no es un hidrocarburo?", formula: "anillo con C y N", options: ["Porque es cíclica", "Porque contiene N además de C y H", "Porque todos sus enlaces son simples"], answer: 1, explain: "Un hidrocarburo solo contiene C e H. La pirimidina es un heterociclo nitrogenado." },
+  { level: 6, title: "Cis y trans", prompt: "¿Qué característica del C=C permite la isomería cis/trans?", formula: "grupos alrededor de C=C", options: ["La libre rotación completa", "La rotación restringida del doble enlace", "La presencia obligatoria de N"], answer: 1, explain: "El doble enlace restringe la rotación; grupos adecuados pueden quedar al mismo lado o en lados opuestos." },
 ];
 
 const labTargets = [
@@ -237,6 +270,7 @@ export default function Home() {
   const [picked, setPicked] = useState<number | null>(null);
   const [feedback, setFeedback] = useState<"correct" | "wrong" | null>(null);
   const [showHint, setShowHint] = useState(false);
+  const [showChoices, setShowChoices] = useState(false);
   const [atoms, setAtoms] = useState<Atom[]>([]);
   const [bonds, setBonds] = useState<Bond[]>([]);
   const [bondOrder, setBondOrder] = useState<1 | 2 | 3>(1);
@@ -307,7 +341,7 @@ export default function Home() {
     else if (practiceModuleFilter !== null) setQuestionAt(0);
     else if (level < levelNames.length) { setLevel((v) => v + 1); setQuestionAt(0); }
     else setQuestionAt(0);
-    setPicked(null); setFeedback(null); setShowHint(false);
+    setPicked(null); setFeedback(null); setShowHint(false); setShowChoices(false);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -508,8 +542,9 @@ export default function Home() {
             </div>
             {moduleId === 4 && <div className="group-map">{functionalGroups.map((g) => <div key={g[0]}><span>{g[0]}</span><b>{g[1]}</b><small>{g[2]}</small></div>)}</div>}
             {moduleId === 1 && <div className="degree-compare"><div><b>¿Cuántos enlaces suma?</b><strong>Valencia</strong><p>Cuenta rayas: — vale 1, = vale 2 y ≡ vale 3.</p></div><span>≠</span><div><b>¿A cuántos C toca?</b><strong>Grado</strong><p>1 C = primario; 2 = secundario; 3 = terciario; 4 = cuaternario.</p></div></div>}
+            {(moduleId === 2 || moduleId === 3) && <CourseDepth moduleId={moduleId} onPractice={() => { setPracticeModuleFilter(moduleId); setPracticeView("free"); setQuestionAt(0); setPicked(null); setFeedback(null); setShowHint(false); setShowChoices(false); switchMode("practice"); }} onBranches={() => switchMode("nomenclature")} onAsk={askTutor}/>}
             <div className="coach-tip"><span>!</span><div><b>Error frecuente</b><p>{currentModule.tip}</p></div></div>
-            <div className="lesson-footer"><button className="secondary" onClick={() => { setPracticeModuleFilter(moduleId); setPracticeView("free"); setQuestionAt(0); setPicked(null); setFeedback(null); setShowHint(false); switchMode("practice"); }}>Practicar solo esta lección</button><button className="primary" onClick={markModule}>{completed.includes(moduleId) ? "Siguiente lección" : "Lo he entendido · +15 XP"} <span>→</span></button></div>
+            <div className="lesson-footer"><button className="secondary" onClick={() => { setPracticeModuleFilter(moduleId); setPracticeView("free"); setQuestionAt(0); setPicked(null); setFeedback(null); setShowHint(false); setShowChoices(false); switchMode("practice"); }}>Practicar solo esta lección</button><button className="primary" onClick={markModule}>{completed.includes(moduleId) ? "Siguiente lección" : "Lo he entendido · +15 XP"} <span>→</span></button></div>
           </div>
         </section>
       </>}
@@ -525,10 +560,10 @@ export default function Home() {
             <div className="challenge-meta"><span>{practiceModuleFilter !== null ? `LECCIÓN ${practiceModuleFilter + 1}` : `NIVEL ${level}`}</span><small>RETO {questionAt + 1} DE {levelQuestions.length}</small></div>
             <div className="theory-link"><div><span>ESTÁS PRACTICANDO</span><b>Lección {relatedModule.id + 1} · {relatedModule.title}</b></div><button onClick={openRelatedTheory}>Repasar teoría →</button></div>
             <h2>{question.title}</h2><p>{question.prompt}</p><Formula text={question.formula}/>
-            {question.options.length === 1 ? <button className="start-lab-activity" onClick={startLabActivity}><span>🧪</span><div><b>Construir en el laboratorio</b><small>Volverás automáticamente al siguiente reto cuando la molécula sea correcta.</small></div><em>→</em></button> : <div className="answers">{question.options.map((option, i) => <button key={option} onClick={() => { setPicked(i); setFeedback(null); }} className={`${picked === i ? "picked" : ""} ${feedback && i === question.answer ? "right" : ""} ${feedback === "wrong" && picked === i ? "wrong" : ""}`}><span>{String.fromCharCode(65 + i)}</span>{option}</button>)}</div>}
+            {question.options.length === 1 ? <button className="start-lab-activity" onClick={startLabActivity}><span>🧪</span><div><b>Construir en el laboratorio</b><small>Volverás automáticamente al siguiente reto cuando la molécula sea correcta.</small></div><em>→</em></button> : (practiceModuleFilter === 2 || practiceModuleFilter === 3) && !showChoices ? <div className="active-recall"><span>✎</span><div><b>Primero resuélvelo sin mirar opciones</b><p>{practiceModuleFilter === 2 ? "Escribe el nombre o dibuja la fórmula en papel. La corrección será más útil si produces la respuesta antes de reconocerla." : "Clasifica la estructura y justifica qué enlace o forma de cadena has observado."}</p></div><button onClick={() => setShowChoices(true)}>Ya lo he intentado · ver opciones</button></div> : <div className="answers">{question.options.map((option, i) => <button key={option} onClick={() => { setPicked(i); setFeedback(null); }} className={`${picked === i ? "picked" : ""} ${feedback && i === question.answer ? "right" : ""} ${feedback === "wrong" && picked === i ? "wrong" : ""}`}><span>{String.fromCharCode(65 + i)}</span>{option}</button>)}</div>}
             {feedback && <div className={`feedback ${feedback}`}><span>{feedback === "correct" ? "✓" : "↺"}</span><div><b>{feedback === "correct" ? "Exacto. +20 XP" : "Todavía no. Revisa la cuenta."}</b><p>{question.explain}</p></div></div>}
             {showHint && !feedback && <div className="hint-box">Pista: separa la estructura átomo por átomo y cuenta las rayas que salen de cada uno.</div>}
-            {question.options.length > 1 && <div className="challenge-actions"><button className="hint" onClick={() => setShowHint(true)}>✦ Dame una pista</button>{feedback === "correct" ? <button className="primary" onClick={nextQuestion}>{questionAt === levelQuestions.length - 1 ? practiceModuleFilter !== null ? "Repetir práctica" : level < levelNames.length ? `Continuar al nivel ${level + 1}` : "Volver al inicio" : "Siguiente reto"} →</button> : <button className="primary" disabled={picked === null} onClick={checkAnswer}>Comprobar</button>}</div>}
+            {question.options.length > 1 && (!(practiceModuleFilter === 2 || practiceModuleFilter === 3) || showChoices) && <div className="challenge-actions"><button className="hint" onClick={() => setShowHint(true)}>✦ Dame una pista</button>{feedback === "correct" ? <button className="primary" onClick={nextQuestion}>{questionAt === levelQuestions.length - 1 ? practiceModuleFilter !== null ? "Repetir práctica" : level < levelNames.length ? `Continuar al nivel ${level + 1}` : "Volver al inicio" : "Siguiente reto"} →</button> : <button className="primary" disabled={picked === null} onClick={checkAnswer}>Comprobar</button>}</div>}
           </div>
           <aside className="score-card"><span>{practiceModuleFilter !== null ? "PROGRESO DE LA LECCIÓN" : "PROGRESO DEL NIVEL"}</span><div className="score-ring" style={{ "--score": `${solvedInCurrentPractice / levelQuestions.length * 360}deg` } as React.CSSProperties}><b>{solvedInCurrentPractice}/{levelQuestions.length}</b></div><h3>{solvedInCurrentPractice === levelQuestions.length ? "¡Contenido afianzado!" : "Sigue razonando"}</h3><p>Este ejercicio corresponde a:</p><strong>{relatedModule.title}</strong><button onClick={openRelatedTheory}>Ver la explicación relacionada</button></aside>
         </div>
