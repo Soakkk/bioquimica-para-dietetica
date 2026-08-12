@@ -4,6 +4,8 @@ import { DragEvent, PointerEvent, useEffect, useMemo, useRef, useState } from "r
 import NomenclatureTrainer from "./NomenclatureTrainer";
 import IntegratedReview from "./IntegratedReview";
 import CourseDepth from "./CourseDepth";
+import InlineLessonPractice from "./InlineLessonPractice";
+import ChainBranchLesson from "./ChainBranchLesson";
 
 type ElementKey = "C" | "H" | "O" | "N";
 type Atom = { id: number; element: ElementKey; x: number; y: number };
@@ -278,6 +280,7 @@ export default function Home() {
   const [firstAtom, setFirstAtom] = useState<number | null>(null);
   const [targetAt, setTargetAt] = useState(0);
   const [labReturnQuestion, setLabReturnQuestion] = useState<number | null>(null);
+  const [labReturnModule, setLabReturnModule] = useState<number | null>(null);
   const [labFeedback, setLabFeedback] = useState<string>("Arrastra un átomo o toca uno de la paleta para empezar.");
   const [tutorOpen, setTutorOpen] = useState(false);
   const [tutorInput, setTutorInput] = useState("");
@@ -307,6 +310,7 @@ export default function Home() {
   const courseProgress = Math.round(((completed.length + solved.length) / (modules.length + questions.length)) * 100);
   const currentModule = modules[moduleId];
   const indexedQuestions = questions.map((q, i) => ({ ...q, globalIndex: i }));
+  const lessonQuestions = indexedQuestions.filter((q) => questionTheory[q.globalIndex] === moduleId);
   const levelQuestions = indexedQuestions.filter((q) => practiceModuleFilter !== null ? questionTheory[q.globalIndex] === practiceModuleFilter : q.level === level);
   const question = levelQuestions[Math.min(questionAt, levelQuestions.length - 1)];
   const currentTarget = labTargets[targetAt];
@@ -355,10 +359,32 @@ export default function Home() {
     setTargetAt(0);
     clearLab();
     setLabReturnQuestion(question.globalIndex);
+    setLabReturnModule(null);
     setMode("lab");
     setTool("bond");
     setLabFeedback("Paso 1: añade un carbono y cuatro hidrógenos. Después toca dos átomos para unirlos.");
     window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function startLessonLab(targetIndex: number) {
+    setTargetAt(targetIndex);
+    clearLab();
+    setLabReturnQuestion(null);
+    setLabReturnModule(moduleId);
+    setMode("lab");
+    setTool("bond");
+    setLabFeedback(`Actividad de la lección ${moduleId + 1}: construye ${labTargets[targetIndex].formula}. Añade los átomos y únelos respetando sus valencias.`);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function startLessonQuestionLab(globalIndex: number) {
+    const formula = questions[globalIndex]?.formula ?? "CH₄";
+    const targetIndex = formula.includes("C₂H₄") ? 4 : formula.includes("C₂H₂") ? 5 : formula.includes("C₂H₆") ? 3 : formula.includes("H₂O") ? 1 : formula.includes("NH₃") ? 2 : 0;
+    startLessonLab(targetIndex);
+  }
+
+  function solveInline(globalIndex: number) {
+    if (!solved.includes(globalIndex)) { setSolved((value) => [...value, globalIndex]); earn(20); }
   }
 
   function addAtom(element: ElementKey, x?: number, y?: number) {
@@ -437,6 +463,10 @@ export default function Home() {
     if (labReturnQuestion !== null) {
       if (!solved.includes(labReturnQuestion)) { setSolved((v) => [...v, labReturnQuestion]); earn(25); }
       setTimeout(() => { setLabReturnQuestion(null); setMode("practice"); nextQuestion(); }, 1600);
+    } else if (labReturnModule !== null) {
+      earn(25);
+      const returnTo = labReturnModule;
+      setTimeout(() => { setLabReturnModule(null); setModuleId(returnTo); setMode("learn"); setTimeout(() => document.getElementById("lesson-practice")?.scrollIntoView({ behavior: "smooth" }), 50); }, 1600);
     } else earn(25);
   }
 
@@ -476,10 +506,9 @@ export default function Home() {
           <span className="brand-mark">C</span><span>Laboratorio<br/><b>del Carbono</b></span>
         </button>
         <nav aria-label="Secciones principales">
-          <button className={mode === "learn" ? "active" : ""} onClick={() => switchMode("learn")}><span>01</span> Aprender</button>
-          <button className={mode === "practice" ? "active" : ""} onClick={() => { setPracticeModuleFilter(null); setPracticeView("routes"); setQuestionAt(0); switchMode("practice"); }}><span>02</span> Repasar</button>
-          <button className={mode === "nomenclature" ? "active" : ""} onClick={() => switchMode("nomenclature")}><span>03</span> Nomenclatura</button>
-          <button className={mode === "lab" ? "active" : ""} onClick={() => switchMode("lab")}><span>04</span> Laboratorio</button>
+          <button className={mode === "learn" ? "active" : ""} onClick={() => switchMode("learn")}><span>01</span> Ruta de estudio</button>
+          <button className={mode === "practice" ? "active" : ""} onClick={() => { setPracticeModuleFilter(null); setPracticeView("routes"); setQuestionAt(0); switchMode("practice"); }}><span>02</span> Repaso final</button>
+          <button className={mode === "lab" && labReturnModule === null && labReturnQuestion === null ? "active" : ""} onClick={() => { setLabReturnModule(null); setLabReturnQuestion(null); switchMode("lab"); }}><span>03</span> Pizarra libre</button>
         </nav>
         <div className="xp"><span>✦</span><b>{xp} XP</b><small>{courseProgress}% completado</small></div>
       </header>
@@ -503,19 +532,6 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="quick-theory">
-          <div className="section-heading"><span>ANTES DE EMPEZAR</span><h2>Cuatro ideas que desbloquean todo</h2><p>Si estas piezas encajan, el resto del tema deja de parecer una lista de nombres.</p></div>
-          <div className="valence-grid">
-            {(["C", "H", "O", "N"] as ElementKey[]).map((e, i) => <article className={`valence-card atom-${e.toLowerCase()}`} key={e}><span className="atom-dot">{e}<small>{valence[e]}</small></span><div><b>{["Carbono", "Hidrógeno", "Oxígeno", "Nitrógeno"][i]}</b><p>{valence[e]} enlace{valence[e] > 1 ? "s" : ""} habitual{valence[e] > 1 ? "es" : ""}</p></div></article>)}
-          </div>
-          <div className="bond-explainer">
-            <article><span className="bond-icon">C—C</span><div><b>Simple</b><p>1 raya · 1 par · 2 e⁻</p></div></article>
-            <article><span className="bond-icon">C=C</span><div><b>Doble</b><p>2 rayas · 2 pares · 4 e⁻</p></div></article>
-            <article><span className="bond-icon">C≡C</span><div><b>Triple</b><p>3 rayas · 3 pares · 6 e⁻</p></div></article>
-            <aside><b>La cuenta hasta 4</b><p>Cada raya ocupa una parte de la valencia. Cuantas más rayas unen los carbonos, menos sitio queda para H.</p></aside>
-          </div>
-        </section>
-
         <section className="guide" id="guide">
           <div className="guide-sidebar">
             <div className="mini-progress"><div><span>Tu ruta</span><b>{completed.length}/{modules.length} lecciones</b></div><i><u style={{ width: `${completed.length / modules.length * 100}%` }}/></i></div>
@@ -527,24 +543,29 @@ export default function Home() {
             <div className="lesson-top"><div><span>{currentModule.eyebrow}</span><h2>{currentModule.title}</h2></div><small>◷ {currentModule.time}</small></div>
             <p className="lesson-intro">{currentModule.intro}</p>
             <div className="principle"><span>IDEA CLAVE</span><p>{currentModule.principle}</p></div>
+            <div className="unified-lesson-route"><span className="active"><b>1</b>Estudiar</span><i>→</i><span><b>2</b>Ver ejemplos</span><i>→</i><span><b>3</b>Practicar</span><i>→</i><span><b>4</b>Actividad aplicada</span><i>→</i><span><b>5</b>Completar tema</span></div>
             <div className="study-body">
-              <div className="study-label"><span>LECCIÓN {moduleId + 1}</span><b>Desarrollo teórico</b><small>Lee con calma; esto es material de estudio, no un resumen.</small></div>
+              <div className="study-label"><span>PASO 1 · LECCIÓN {moduleId + 1}</span><b>Teoría completa en un solo lugar</b><small>Empieza aquí y continúa hacia abajo; no necesitas buscar explicaciones en otra sección.</small></div>
               {studySections[moduleId].map((section) => <section className="study-section" key={section.heading}>
                 <h3>{section.heading}</h3>
                 {section.paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
                 {section.worked && <div className="worked-example"><div><span>EJEMPLO RESUELTO</span><b>{section.worked.title}</b></div><Formula text={section.worked.formula}/><ol>{section.worked.steps.map((step, i) => <li key={step}><span>{i + 1}</span><p>{step}</p></li>)}</ol></div>}
               </section>)}
+              {(moduleId === 2 || moduleId === 3) && <CourseDepth key={moduleId} moduleId={moduleId} onPractice={() => document.getElementById("lesson-practice")?.scrollIntoView({ behavior: "smooth" })} onBranches={() => document.getElementById("branch-embedded")?.scrollIntoView({ behavior: "smooth" })} onAsk={askTutor}/>}
             </div>
-            <h3 className="visual-summary-title">Resumen visual de la lección</h3>
+            <h3 className="visual-summary-title">Paso 2 · Resumen y ejemplos antes de practicar</h3>
             <div className="lesson-columns">
               <div><h3>Lo que vas a dominar</h3><ol>{currentModule.topics.map((t, i) => <li key={t}><span>{i + 1}</span>{t}</li>)}</ol></div>
               <div><h3>Ejemplos que debes leer</h3>{currentModule.examples.map((e) => <div className="example-row" key={e[0]}><Formula text={e[0]}/><div><b>{e[1]}</b><small>{e[2]}</small></div></div>)}</div>
             </div>
             {moduleId === 4 && <div className="group-map">{functionalGroups.map((g) => <div key={g[0]}><span>{g[0]}</span><b>{g[1]}</b><small>{g[2]}</small></div>)}</div>}
             {moduleId === 1 && <div className="degree-compare"><div><b>¿Cuántos enlaces suma?</b><strong>Valencia</strong><p>Cuenta rayas: — vale 1, = vale 2 y ≡ vale 3.</p></div><span>≠</span><div><b>¿A cuántos C toca?</b><strong>Grado</strong><p>1 C = primario; 2 = secundario; 3 = terciario; 4 = cuaternario.</p></div></div>}
-            {(moduleId === 2 || moduleId === 3) && <CourseDepth moduleId={moduleId} onPractice={() => { setPracticeModuleFilter(moduleId); setPracticeView("free"); setQuestionAt(0); setPicked(null); setFeedback(null); setShowHint(false); setShowChoices(false); switchMode("practice"); }} onBranches={() => switchMode("nomenclature")} onAsk={askTutor}/>}
+            <InlineLessonPractice key={moduleId} moduleId={moduleId} moduleTitle={currentModule.title} questions={lessonQuestions} solved={solved} onSolve={solveInline} onAsk={askTutor} onOpenLab={startLessonQuestionLab}/>
+            {moduleId === 2 && <div id="branch-embedded"><ChainBranchLesson embedded onEarn={earn} onAsk={askTutor}/></div>}
+            {(moduleId === 0 || moduleId === 1 || moduleId === 3) && <section className="lesson-lab-activity"><div><span>PASO 4 · ACTIVIDAD APLICADA</span><h3>Compruébalo construyendo</h3><p>La pizarra se abre con moléculas relacionadas con esta lección y vuelve aquí cuando la estructura sea correcta.</p></div><div>{(moduleId === 0 ? [0,1,2] : moduleId === 1 ? [0,3,4,5] : [3,4,5]).map((targetIndex) => <button key={targetIndex} onClick={() => startLessonLab(targetIndex)}><b>{labTargets[targetIndex].formula}</b><small>{labTargets[targetIndex].name}</small></button>)}</div></section>}
+            {(moduleId === 2 || moduleId === 3) && <div className="optional-free-tool"><div><span>PRÁCTICA EXTRA OPCIONAL</span><b>Gimnasio de nomenclatura</b><p>Úsalo después de completar los ejercicios de esta lección si quieres practicar muchas variantes.</p></div><button onClick={() => switchMode("nomenclature")}>Abrir práctica libre →</button></div>}
             <div className="coach-tip"><span>!</span><div><b>Error frecuente</b><p>{currentModule.tip}</p></div></div>
-            <div className="lesson-footer"><button className="secondary" onClick={() => { setPracticeModuleFilter(moduleId); setPracticeView("free"); setQuestionAt(0); setPicked(null); setFeedback(null); setShowHint(false); setShowChoices(false); switchMode("practice"); }}>Practicar solo esta lección</button><button className="primary" onClick={markModule}>{completed.includes(moduleId) ? "Siguiente lección" : "Lo he entendido · +15 XP"} <span>→</span></button></div>
+            <div className="lesson-footer unified-finish"><div><span>PASO 5</span><b>{lessonQuestions.filter((q) => solved.includes(q.globalIndex)).length}/{lessonQuestions.length} ejercicios dominados</b></div><button className="primary" onClick={markModule}>{completed.includes(moduleId) ? "Ir a la siguiente lección" : "Completar tema · +15 XP"} <span>→</span></button></div>
           </div>
         </section>
       </>}
@@ -570,12 +591,13 @@ export default function Home() {
         </>}
       </section>}
 
-      {mode === "nomenclature" && <NomenclatureTrainer onEarn={earn} onAsk={askTutor}/>}
+      {mode === "nomenclature" && <><div className="context-return"><span>PRÁCTICA EXTRA · LECCIÓN {moduleId + 1}</span><b>Has abierto el gimnasio desde «{currentModule.title}».</b><button onClick={() => { switchMode("learn"); setTimeout(() => document.getElementById("lesson-practice")?.scrollIntoView({ behavior: "smooth" }), 50); }}>← Volver a esta lección</button></div><NomenclatureTrainer onEarn={earn} onAsk={askTutor}/></>}
 
       {mode === "lab" && <section className="lab-page">
         <div className="page-intro lab-intro"><span className="kicker"><i/> PIZARRA MOLECULAR</span><h1>Construye. Une. Comprueba.</h1><p>Añade los átomos y únelos tocando primero uno y después otro. La guía te indica siempre el siguiente paso.</p></div>
         {labReturnQuestion !== null && <div className="lab-return-banner"><span>ACTIVIDAD DE LA LECCIÓN {questionTheory[labReturnQuestion] + 1}</span><b>Completa {currentTarget.formula}; volverás al siguiente ejercicio automáticamente.</b></div>}
-        <div className="target-bar"><div><span>RETO ACTUAL</span><b>{currentTarget.name} <em>{currentTarget.formula}</em></b></div><div className="target-options">{labTargets.map((t, i) => <button disabled={labReturnQuestion !== null} className={targetAt === i ? "active" : ""} onClick={() => { setTargetAt(i); clearLab(); }} key={t.name}>{t.formula}</button>)}</div><button className="target-hint" onClick={() => setLabFeedback(`Pista: ${currentTarget.hint}`)}>✦ Pista</button></div>
+        {labReturnModule !== null && <div className="lab-return-banner"><span>ACTIVIDAD DE LA LECCIÓN {labReturnModule + 1}</span><b>Completa {currentTarget.formula}; volverás al mismo punto de la teoría automáticamente.</b></div>}
+        <div className="target-bar"><div><span>RETO ACTUAL</span><b>{currentTarget.name} <em>{currentTarget.formula}</em></b></div><div className="target-options">{labTargets.map((t, i) => <button disabled={labReturnQuestion !== null || labReturnModule !== null} className={targetAt === i ? "active" : ""} onClick={() => { setTargetAt(i); clearLab(); }} key={t.name}>{t.formula}</button>)}</div><button className="target-hint" onClick={() => setLabFeedback(`Pista: ${currentTarget.hint}`)}>✦ Pista</button></div>
         <div className="lab-shell">
           <aside className="atom-palette"><span>PASO 1 · AÑADE ÁTOMOS</span>{(["C", "H", "O", "N"] as ElementKey[]).map((e) => <button key={e} draggable onDragStart={(ev) => ev.dataTransfer.setData("element", e)} onClick={() => addAtom(e)} className={`palette-atom atom-${e.toLowerCase()}`}><i>{e}</i><div><b>{e === "C" ? "Carbono" : e === "H" ? "Hidrógeno" : e === "O" ? "Oxígeno" : "Nitrógeno"}</b><small>toca para añadir · valencia {valence[e]}</small></div><em>＋</em></button>)}<div className="palette-note"><b>No hace falta arrastrar</b><p>Toca C, H, O o N y aparecerá en la pizarra. Después podrás moverlo.</p></div></aside>
           <div className="board-wrap">

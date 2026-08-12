@@ -122,7 +122,7 @@ function Molecule({ kind, reveal = false }: { kind: Exercise["diagram"]; reveal?
   </div>;
 }
 
-export default function ChainBranchLesson({ onEarn, onAsk }: { onEarn: (amount: number) => void; onAsk: (text: string) => void }) {
+export default function ChainBranchLesson({ onEarn, onAsk, embedded = false }: { onEarn: (amount: number) => void; onAsk: (text: string) => void; embedded?: boolean }) {
   const [view, setView] = useState<"theory" | "practice">("theory");
   const [index, setIndex] = useState(0);
   const [picked, setPicked] = useState<number | null>(null);
@@ -171,9 +171,10 @@ export default function ChainBranchLesson({ onEarn, onAsk }: { onEarn: (amount: 
   }
 
   return <section className="branch-course">
+    {embedded && <div className="embedded-activity-title"><span>PASO 4 · TALLER GUIADO</span><h3>Cadena principal y sustituyentes</h3><p>La explicación visual y los ejercicios de la parte más difícil están reunidos aquí.</p></div>}
     <div className="branch-course-tabs">
-      <button className={view === "theory" ? "active" : ""} onClick={() => setView("theory")}><span>1</span><b>Comprender</b><small>Rama, sustituyente y cadena</small></button>
-      <button className={view === "practice" ? "active" : ""} onClick={() => setView("practice")}><span>2</span><b>Practicar</b><small>{completed.length}/{exercises.length} ejercicios dominados</small></button>
+      <button className={view === "theory" ? "active" : ""} onClick={() => setView("theory")}><span>1</span><b>Explicación visual</b><small>Rama, sustituyente y cadena</small></button>
+      <button className={view === "practice" ? "active" : ""} onClick={() => setView("practice")}><span>2</span><b>Ejercicios aplicados</b><small>{completed.length}/{exercises.length} dominados</small></button>
     </div>
 
     {view === "theory" ? <div className="branch-theory">
