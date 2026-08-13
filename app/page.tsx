@@ -273,6 +273,7 @@ export default function Home() {
   const [feedback, setFeedback] = useState<"correct" | "wrong" | null>(null);
   const [showHint, setShowHint] = useState(false);
   const [showChoices, setShowChoices] = useState(false);
+  const [courseMapOpen, setCourseMapOpen] = useState(false);
   const [atoms, setAtoms] = useState<Atom[]>([]);
   const [bonds, setBonds] = useState<Bond[]>([]);
   const [bondOrder, setBondOrder] = useState<1 | 2 | 3>(1);
@@ -329,7 +330,16 @@ export default function Home() {
 
   function markModule() {
     if (!completed.includes(moduleId)) { setCompleted((v) => [...v, moduleId]); earn(15); }
-    if (moduleId < modules.length - 1) setModuleId(moduleId + 1);
+    if (moduleId < modules.length - 1) {
+      setModuleId(moduleId + 1);
+      setTimeout(() => document.getElementById("guide")?.scrollIntoView({ behavior: "smooth" }), 50);
+    }
+  }
+
+  function selectModule(nextModule: number) {
+    setModuleId(Math.max(0, Math.min(modules.length - 1, nextModule)));
+    setCourseMapOpen(false);
+    setTimeout(() => document.getElementById("guide")?.scrollIntoView({ behavior: "smooth" }), 50);
   }
 
   function checkAnswer() {
@@ -534,10 +544,18 @@ export default function Home() {
 
         <section className="guide" id="guide">
           <div className="guide-sidebar">
-            <div className="mini-progress"><div><span>Tu ruta</span><b>{completed.length}/{modules.length} lecciones</b></div><i><u style={{ width: `${completed.length / modules.length * 100}%` }}/></i></div>
-            <div className="module-list">
-              {modules.map((m) => <button key={m.id} onClick={() => setModuleId(m.id)} className={moduleId === m.id ? "selected" : ""}><span>{completed.includes(m.id) ? "✓" : String(m.id + 1).padStart(2, "0")}</span><div><small>{m.eyebrow}</small><b>{m.title}</b></div><em>›</em></button>)}
+            <div className="course-dock">
+              <div className="course-dock-current"><span>ESTÁS ESTUDIANDO</span><b><i>{String(moduleId + 1).padStart(2, "0")}</i>{currentModule.title}</b><small>{currentModule.eyebrow}</small></div>
+              <div className="mini-progress"><div><span>Progreso del temario</span><b>{completed.length}/{modules.length} lecciones</b></div><i><u style={{ width: `${completed.length / modules.length * 100}%` }}/></i></div>
+              <div className="course-dock-actions">
+                <button aria-label="Ir a la lección anterior" disabled={moduleId === 0} onClick={() => selectModule(moduleId - 1)}>←</button>
+                <button className="course-map-toggle" aria-expanded={courseMapOpen} aria-controls="course-module-list" onClick={() => setCourseMapOpen((open) => !open)}><span>{courseMapOpen ? "Cerrar" : "Ver"} temario</span><i>{courseMapOpen ? "−" : "+"}</i></button>
+                <button aria-label="Ir a la lección siguiente" disabled={moduleId === modules.length - 1} onClick={() => selectModule(moduleId + 1)}>→</button>
+              </div>
             </div>
+            {courseMapOpen && <div className="module-list" id="course-module-list">
+              {modules.map((m) => <button key={m.id} onClick={() => selectModule(m.id)} className={moduleId === m.id ? "selected" : ""}><span>{completed.includes(m.id) ? "✓" : String(m.id + 1).padStart(2, "0")}</span><div><small>{m.eyebrow}</small><b>{m.title}</b></div><em>›</em></button>)}
+            </div>}
           </div>
           <div className="lesson">
             <div className="lesson-top"><div><span>{currentModule.eyebrow}</span><h2>{currentModule.title}</h2></div><small>◷ {currentModule.time}</small></div>
