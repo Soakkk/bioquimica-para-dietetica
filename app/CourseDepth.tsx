@@ -43,10 +43,10 @@ const namingSections: DepthSection[] = [
   },
   {
     id: "multiple", title: "Dobles, triples y enlaces múltiples", priority: "exam",
-    summary: "Los localizadores de las insaturaciones forman parte de la cadena principal.",
-    theory: ["La cadena principal debe contener el mayor número posible de dobles y triples enlaces. Se numera para dar localizadores bajos a esas insaturaciones antes de considerar las ramas.", "Dos dobles enlaces usan -dieno; tres, -trieno. Dos triples usan -diino; tres, -triino. Después se completa cada carbono hasta cuatro enlaces."],
-    examples: [{ formula: "hepta-2,5-dieno", reading: "7 C · dobles enlaces desde C2 y C5" }, { formula: "nona-2,4,6-triino", reading: "9 C · triples enlaces desde C2, C4 y C6" }],
-    checkpoint: "Debes pasar del nombre a un esqueleto correcto y completar CH₃, CH₂, CH o C sin memorizarlo.",
+    summary: "Ahora unimos lo aprendido: la misma molécula puede tener ramas metil o etil y, además, enlaces dobles o triples.",
+    theory: ["Metil y etil describen sustituyentes: grupos que quedan fuera de la cadena principal. En cambio, -eno e -ino describen un enlace que está dentro de esa cadena. Los dos necesitan localizadores, pero cada número señala una cosa diferente.", "En este bloque, la cadena principal debe incluir el enlace doble o triple y contener el mayor número posible de enlaces múltiples. Después se identifican como ramas los carbonos que quedan fuera de ese recorrido.", "Al numerar, el enlace múltiple debe recibir el localizador más bajo antes que la rama. Por eso podemos aceptar una rama en C3 si así conseguimos que C=C empiece en C1.", "Si hay dos dobles enlaces usamos -dieno; tres, -trieno. Dos triples usan -diino y tres, -triino. Se escribe un localizador por cada enlace múltiple y después se completan los H hasta que cada carbono sume cuatro enlaces."],
+    examples: [{ formula: "3-metilhex-2-eno", reading: "metil en C3 · cadena de 6 C · doble enlace desde C2" }, { formula: "hepta-2,5-dieno", reading: "7 C principales · dobles enlaces desde C2 y C5" }],
+    checkpoint: "Debes distinguir qué número localiza una rama y qué número localiza un enlace múltiple dentro de un mismo nombre.",
   },
   {
     id: "audit", title: "Auditoría final de la fórmula", priority: "diet",
@@ -113,6 +113,49 @@ function PriorityBadge({ value }: { value: Priority }) {
   return <span className={`depth-priority ${value}`}>{priorityText[value]}</span>;
 }
 
+function MultipleBondBridge() {
+  const [choice, setChoice] = useState<number | null>(null);
+  const options = ["3-metilbut-1-eno", "2-metilbut-3-eno", "3-etilprop-1-eno"];
+  const numberedStructure = ["           CH₃  ← rama metil", "           |", "CH₃ — CH = C — CH₂ — CH₂ — CH₃", " 1     2   3     4      5      6"].join("\n");
+
+  return <section className="bond-bridge">
+    <header><span>CONEXIÓN CON LO ANTERIOR</span><h5>Ramas y enlaces múltiples usan números, pero no significan lo mismo</h5><p>Piensa que cada localizador es una dirección. La palabra que aparece junto al número te dice qué debes buscar en esa dirección.</p></header>
+
+    <div className="bond-locator-compare">
+      <article><span>LOCALIZADOR DE RAMA</span><code>3-metilhexano</code><p>El <b>3</b> señala el carbono donde se engancha la rama <b>—CH₃</b>.</p></article>
+      <article><span>LOCALIZADOR DE ENLACE</span><code>hex-2-eno</code><p>El <b>2</b> señala el primer carbono del enlace <b>C2=C3</b>.</p></article>
+    </div>
+
+    <article className="combined-name">
+      <div><span>EJEMPLO COMPLETO</span><h6>3-metilhex-2-eno</h6><p>Aquí aparecen las dos ideas a la vez. Primero dibujamos la cadena principal con su doble enlace y después añadimos la rama.</p></div>
+      <div className="numbered-structure" aria-label="Estructura numerada del 3-metilhex-2-eno"><pre>{numberedStructure}</pre></div>
+      <div className="name-decoder">
+        <div><b>3</b><span>la rama se une a C3</span></div>
+        <div><b>metil</b><span>la rama es —CH₃</span></div>
+        <div><b>hex</b><span>cadena principal de 6 C</span></div>
+        <div><b>2</b><span>C=C empieza en C2</span></div>
+        <div><b>eno</b><span>hay un enlace doble</span></div>
+      </div>
+      <p className="bridge-valence-note"><b>Cuenta del C3:</b> el doble enlace vale 2, el enlace con C4 vale 1 y el enlace con la rama metil vale 1. Suma 4, por eso C3 no lleva ningún H.</p>
+    </article>
+
+    <p className="triple-transfer"><b>Con un triple se lee igual:</b> en <strong>4-etilhept-2-ino</strong>, 4-etil coloca una rama —CH₂—CH₃ en C4; hept indica 7 carbonos principales; y 2-ino coloca C≡C entre C2 y C3.</p>
+
+    <div className="numbering-priority">
+      <div><span>DESDE LA IZQUIERDA</span><code>CH₂=CH—CH(CH₃)—CH₃</code><b>C=C en 1 · metil en 3</b></div>
+      <i>✓</i>
+      <div><span>DESDE LA DERECHA</span><code>CH₃—CH(CH₃)—CH=CH₂</code><b>metil en 2 · C=C en 3</b></div>
+      <p><strong>Elegimos la izquierda:</strong> en estos hidrocarburos el doble enlace recibe el número más bajo antes que la rama. El nombre es <b>3-metilbut-1-eno</b>, no 2-metilbut-3-eno.</p>
+    </div>
+
+    <div className="bridge-check">
+      <div><span>COMPRUEBA LA IDEA</span><b>¿Cómo nombrarías CH₂=CH—CH(CH₃)—CH₃?</b><small>Busca primero el localizador más bajo para C=C.</small></div>
+      <div>{options.map((option, index) => <button key={option} className={choice === index ? index === 0 ? "right" : "wrong" : ""} onClick={() => setChoice(index)}>{option}</button>)}</div>
+      {choice !== null && <p className={choice === 0 ? "correct" : "retry"}>{choice === 0 ? "✓ Correcto: but- indica 4 C, 1 localiza C=C y 3-metil coloca la rama en C3." : "Todavía no: numera desde el extremo del doble enlace. Así C=C empieza en C1 y la rama metil queda en C3."}</p>}
+    </div>
+  </section>;
+}
+
 export default function CourseDepth({ moduleId, onPractice, onBranches, onAsk }: { moduleId: 2 | 3; onPractice: () => void; onBranches: () => void; onAsk: (text: string) => void }) {
   const sections = moduleId === 2 ? namingSections : hydrocarbonSections;
   const [active, setActive] = useState(sections[0].id);
@@ -123,7 +166,7 @@ export default function CourseDepth({ moduleId, onPractice, onBranches, onAsk }:
 
     {moduleId === 3 && <div className="hydrocarbon-tree" aria-label="Clasificación de los hidrocarburos"><div className="tree-root"><b>HIDROCARBUROS</b><small>solo C + H</small></div><i/><div className="tree-branches"><div><b>CADENA ABIERTA</b><span>Alcanos</span><span>Alquenos</span><span>Alquinos</span></div><div><b>CADENA CERRADA</b><span>Cicloalcanos</span><span>Aromáticos</span><span className="tree-warning">Heterociclos* <small>se estudian junto a ellos, pero contienen N/O/S</small></span></div></div></div>}
 
-    <div className="depth-workspace"><nav>{sections.map((section, i) => <button key={section.id} className={active === section.id ? "active" : ""} onClick={() => setActive(section.id)}><span>{String(i + 1).padStart(2,"0")}</span><div><b>{section.title}</b><small>{section.summary}</small></div><em>→</em></button>)}</nav><article className="depth-content"><PriorityBadge value={current.priority}/><h4>{current.title}</h4><p className="depth-summary">{current.summary}</p>{current.theory.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}<div className="depth-examples">{current.examples.map((example) => <div key={example.formula}><code>{example.formula}</code><span>{example.reading}</span></div>)}</div><div className="depth-checkpoint"><span>✓</span><div><b>Objetivo de dominio</b><p>{current.checkpoint}</p></div></div></article></div>
+    <div className="depth-workspace"><nav>{sections.map((section, i) => <button key={section.id} className={active === section.id ? "active" : ""} onClick={() => setActive(section.id)}><span>{String(i + 1).padStart(2,"0")}</span><div><b>{section.title}</b><small>{section.summary}</small></div><em>→</em></button>)}</nav><article className="depth-content"><PriorityBadge value={current.priority}/><h4>{current.title}</h4><p className="depth-summary">{current.summary}</p>{current.theory.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}<div className="depth-examples">{current.examples.map((example) => <div key={example.formula}><code>{example.formula}</code><span>{example.reading}</span></div>)}</div>{moduleId === 2 && current.id === "multiple" && <MultipleBondBridge/>}<div className="depth-checkpoint"><span>✓</span><div><b>Objetivo de dominio</b><p>{current.checkpoint}</p></div></div></article></div>
 
     {moduleId === 2 ? <div className="book-translation"><div><span>TRADUCTOR DEL LIBRO</span><h4>Nomenclatura antigua, moderna y erratas</h4><p>Aprenderás la forma moderna, pero reconocerás la que aparece en las capturas.</p></div><div className="translation-table"><div><b>En el libro</b><b>Forma que usaremos</b><b>Qué ocurre</b></div><div><code>2 hexeno</code><code>hex-2-eno</code><span>Mismo compuesto; cambia la colocación moderna del localizador.</span></div><div><code>2,4,6 nonatriino</code><code>nona-2,4,6-triino</code><span>Tres triples enlaces en una cadena de 9 carbonos.</span></div><div><code>2-dimetilbutano</code><code>nombre incompleto</code><span>“di-” exige dos localizadores: por ejemplo, 2,2-dimetilbutano.</span></div><div><code>metil, propano</code><code>2-metilpropano</code><span>Falta el localizador y la puntuación correcta.</span></div></div></div> : <div className="book-corrections"><span>LECTURA CRÍTICA DEL LIBRO</span><div><article><b>Heterociclos</b><p>Se agrupan cerca de los ciclos, pero no son hidrocarburos porque contienen N, O o S.</p></article><article><b>“Aromático”</b><p>Describe estabilidad y deslocalización electrónica; no significa necesariamente que huela.</p></article><article><b>Grasas poliinsaturadas</b><p>Las más comunes no suelen ser conjugadas; los dobles enlaces conjugados son un caso específico.</p></article><article><b>Fórmulas generales</b><p>CₙH₂ₙ o CₙH₂ₙ₋₂ solo identifican una familia cuando conocemos también la estructura y el número de ciclos o insaturaciones.</p></article></div></div>}
 
