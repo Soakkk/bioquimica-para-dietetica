@@ -135,7 +135,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
   align-items: center;
   gap: 18px;
   flex-wrap: wrap;
-  max-width: 1080px;
+  max-width: 1180px;
   margin: 0 auto 26px;
   padding: 14px 18px;
   background: var(--cream);
@@ -175,11 +175,11 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
 
 /* --- prosa compartida por las dos vistas --- */
 .lr-prose p {
-  font-size: 17px;
-  line-height: 1.8;
+  font-size: 17.5px;
+  line-height: 1.78;
   color: #26383f;
-  margin: 0 0 18px;
-  max-width: 54ch; /* ≈68 caracteres: el glifo 0 de esta fuente es ancho */
+  margin: 0 0 20px;
+  max-width: 64ch; /* ≈78 caracteres reales: el glifo 0 de esta fuente es ancho */
 }
 .lr-prose p:last-child { margin-bottom: 0; }
 
@@ -205,7 +205,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
   line-height: 1.6;
   color: #3c5459;
   border-radius: 0 7px 7px 0;
-  max-width: 48ch;
+  max-width: 58ch;
 }
 .lr-note b {
   display: block;
@@ -240,7 +240,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
   padding: 14px 16px;
   border-radius: 8px;
   margin: 0 0 24px;
-  max-width: 54ch;
+  max-width: 64ch;
 }
 .lr-updated span {
   display: block;
@@ -317,7 +317,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
 }
 
 /* --- A · lectura continua --- */
-.lr-continuous { max-width: 1080px; margin: 0 auto; }
+.lr-continuous { max-width: 1180px; margin: 0 auto; }
 .lr-block {
   background: var(--white);
   border: 1px solid var(--line);
@@ -360,7 +360,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
 
 /* --- B · paso a paso --- */
 .lr-steps {
-  max-width: 900px;
+  max-width: 1020px;
   margin: 0 auto;
   background: var(--white);
   border: 1px solid var(--line);
@@ -506,3 +506,40 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
   .bio-theme-row { grid-template-columns: 36px 1fr; padding: 13px 14px; }
   .bio-theme-row__meta { grid-column: 2; margin-top: 4px; }
 }
+
+
+/* --- cabecera compacta de tema (sustituye al hero de pantalla completa) --- */
+.topic-head {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 34px clamp(24px, 4vw, 56px) 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.topic-head h1 {
+  font-size: clamp(30px, 4vw, 44px);
+  letter-spacing: -.04em;
+  line-height: 1.05;
+  margin: 12px 0 0;
+}
+.topic-head__actions { display: flex; gap: 9px; flex-wrap: wrap; }
+.topic-head__actions .secondary { padding: 11px 15px; font-size: 13px; }
+
+/* La guía arranca justo debajo: sin pantalla intermedia que scrollear. */
+.guide { padding-top: 34px; }
+
+@media (max-width: 760px) {
+  .topic-head { padding: 22px 16px 0; }
+  .topic-head__actions { width: 100%; }
+  .topic-head__actions .secondary { flex: 1; }
+  .guide { padding-top: 24px; }
+}
+
+/* Cuerpo de lectura del Tema 1: más ancho y con el mismo tamaño de texto
+   que el resto del curso, para que las dos partes se lean igual. */
+.study-body { max-width: 880px; }
+.study-section > p { font-size: 17px; line-height: 1.78; max-width: 64ch; }
+.lesson-intro { font-size: 18px; max-width: 68ch; }

@@ -652,22 +652,14 @@ export default function Home() {
       />}
 
       {mode === "learn" && <>
-        <section className="hero">
-          <div className="hero-copy">
+        <section className="topic-head">
+          <div>
             <span className="kicker"><i/> TEMA 1 · QUÍMICA ORGÁNICA DESDE CERO</span>
-            <h1>No memorices<br/><em>moléculas.</em><br/>Aprende a leerlas.</h1>
-            <p>Una ruta visual para comprender el carbono, formular compuestos y reconocer la química que hay dentro de la vida.</p>
-            <div className="hero-actions">
-              <button className="primary" onClick={() => document.getElementById("guide")?.scrollIntoView({ behavior: "smooth" })}>Empezar la guía <span>→</span></button>
-              <button className="secondary" onClick={() => switchMode("lab")}>Abrir la pizarra</button>
-              <button className="secondary" onClick={() => switchMode("program")}>← Volver al plan</button>
-            </div>
+            <h1>Química del carbono</h1>
           </div>
-          <div className="hero-visual" aria-label="Comparación de enlaces del carbono">
-            <div className="lab-label">REGLA MAESTRA <span>EN VIVO</span></div>
-            <div className="carbon-orbit"><span className="h h1">H</span><span className="h h2">H</span><span className="h h3">H</span><span className="h h4">H</span><span className="carbon">C<small>4</small></span><i className="line l1"/><i className="line l2"/><i className="line l3"/><i className="line l4"/></div>
-            <div className="equation"><b>1 + 1 + 1 + 1</b><span>=</span><strong>4 enlaces</strong></div>
-            <p>El carbono neutro típico siempre busca completar su cuenta.</p>
+          <div className="topic-head__actions">
+            <button className="secondary" onClick={() => switchMode("lab")}>Abrir la pizarra</button>
+            <button className="secondary" onClick={() => switchMode("program")}>← Volver al temario</button>
           </div>
         </section>
 
