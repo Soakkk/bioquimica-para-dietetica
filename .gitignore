@@ -39,3 +39,6 @@ yarn-error.log*
 /outputs/
 /work/
 tsconfig.tsbuildinfo
+
+# Build estático generado por scripts/build-static.mjs
+dist-static/
