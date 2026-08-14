@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { CourseBlock, CourseTheme } from "./bio-course-data";
 import { blockSections, type BlockSection } from "./bio-course-sections";
+import { blockIndexAt, readPlace, savePlace } from "./reading-place";
 
 export type ReadingMode = "continuo" | "pasos";
 
@@ -98,8 +99,73 @@ function WorkedExample({ block }: { block: CourseBlock }) {
 /* ─────────────────────────── A · lectura continua ─────────────────────────── */
 
 function ContinuousReader({ theme }: { theme: CourseTheme }) {
+  const rootRef = useRef<HTMLDivElement>(null);
+  // Se lee una sola vez al montar: si volvemos al tema, ofrecemos retomar.
+  const [resume, setResume] = useState(() => {
+    const place = readPlace(theme.id);
+    return place && place.blockIndex > 0 ? place : null;
+  });
+
+  // Guardar por bloque, no por píxeles: el scroll exacto se rompe en cuanto
+  // cambia el tamaño de la ventana o el contenido. Se usa un listener de
+  // scroll y no IntersectionObserver porque los bloques son mucho más altos
+  // que la ventana, y así el cálculo es explícito y comprobable.
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+
+    const blocks = Array.from(root.querySelectorAll<HTMLElement>(".lr-block"));
+    if (!blocks.length) return;
+
+    let timer: number | null = null;
+
+    const record = () => {
+      const tops = blocks.map((block) => block.getBoundingClientRect().top + window.scrollY);
+      const blockIndex = blockIndexAt(tops, window.scrollY, window.innerHeight);
+      savePlace(theme.id, {
+        blockIndex,
+        blockTitle: theme.blocks[blockIndex]?.title ?? "",
+        updatedAt: new Date().toISOString(),
+      });
+    };
+
+    const onScroll = () => {
+      if (timer !== null) window.clearTimeout(timer);
+      timer = window.setTimeout(record, 400);
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      if (timer !== null) window.clearTimeout(timer);
+      window.removeEventListener("scroll", onScroll);
+    };
+  }, [theme]);
+
+  const jumpToResume = () => {
+    const target = resume ? theme.blocks[resume.blockIndex] : undefined;
+    if (target) document.getElementById(target.id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    setResume(null);
+  };
+
   return (
-    <div className="lr-continuous">
+    <div className="lr-continuous" ref={rootRef}>
+      {resume ? (
+        <div className="lr-resume" role="status">
+          <div>
+            <span>Seguías por aquí</span>
+            <b>Bloque {resume.blockIndex + 1} · {resume.blockTitle}</b>
+          </div>
+          <div className="lr-resume__actions">
+            <button className="lr-btn" type="button" onClick={() => setResume(null)}>
+              Empezar de nuevo
+            </button>
+            <button className="lr-btn lr-btn--primary" type="button" onClick={jumpToResume}>
+              Continuar ahí →
+            </button>
+          </div>
+        </div>
+      ) : null}
+
       {theme.blocks.map((block, blockIndex) => (
         <section className="lr-block" id={block.id} key={block.id}>
           <header className="lr-block__head">
@@ -196,6 +262,15 @@ function StepReader({ theme }: { theme: CourseTheme }) {
       localStorage.setItem(STEP_KEY, JSON.stringify(saved));
     } catch {
       /* el paso a paso funciona igual sin memoria */
+    }
+    // Los dos modos comparten la misma noción de "por dónde ibas".
+    const step = steps[clamped];
+    if (step) {
+      savePlace(theme.id, {
+        blockIndex: step.blockIndex,
+        blockTitle: step.blockTitle,
+        updatedAt: new Date().toISOString(),
+      });
     }
     if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
   };

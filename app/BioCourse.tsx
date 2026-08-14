@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import {
   bioThemes,
   courseSources,
@@ -12,6 +12,7 @@ import {
 } from "./bio-course-data";
 import LessonReader, { ModeToggle, readStoredMode, type ReadingMode } from "./LessonReader";
 import ProgressBackup from "./ProgressBackup";
+import { readLastTheme, readPlace, saveLastTheme } from "./reading-place";
 
 type BioCourseProps = {
   completedThemes: number[];
@@ -141,6 +142,23 @@ function CourseDashboard({
   onOpenLab: () => void;
   onOpenReview: () => void;
 }) {
+  // "Superado" (prueba ≥80 %) y "por dónde ibas" son cosas distintas, y antes
+  // el panel solo conocía la primera. El servidor no puede saber lo segundo,
+  // así que se lee con useSyncExternalStore: durante la hidratación devuelve
+  // el valor del servidor y solo después el del navegador, sin desajuste.
+  const lastThemeNumber = useSyncExternalStore(
+    () => () => {},
+    () => readLastTheme(),
+    () => null,
+  );
+  const resume = useMemo(() => {
+    if (lastThemeNumber === null) return null;
+    const theme = bioThemes.find((item) => item.number === lastThemeNumber);
+    if (!theme) return null;
+    const place = readPlace(theme.id);
+    return { theme, blockIndex: place?.blockIndex ?? 0, blockTitle: place?.blockTitle ?? "" };
+  }, [lastThemeNumber]);
+
   const nextTheme = firstUnfinishedTheme(completedThemes);
   const requiredThemes = bioThemes.filter((theme) => theme.number <= 12);
   const completedRequired = requiredThemes.filter((theme) => completedThemes.includes(theme.number)).length;
@@ -162,18 +180,26 @@ function CourseDashboard({
             se ha quedado. Sin calendario: avanzas cuando puedes y la app recuerda por dónde ibas.
           </p>
           <div className="bio-dashboard-hero__actions">
-            <button
-              className="bio-button bio-button--primary"
-              onClick={nextTheme ? () => onOpenTheme(nextTheme.number) : onOpenReview}
-              type="button"
-            >
-              {nextTheme ? `Continuar con Tema ${nextTheme.number} →` : "Ruta principal completada · repasar →"}
-            </button>
-            {nextTheme ? (
-              <button className="bio-button bio-button--secondary" onClick={onOpenReview} type="button">
-                Abrir repaso adaptativo
+            {resume ? (
+              <button
+                className="bio-button bio-button--primary"
+                onClick={() => onOpenTheme(resume.theme.number)}
+                type="button"
+              >
+                Seguir donde lo dejaste →
               </button>
-            ) : null}
+            ) : (
+              <button
+                className="bio-button bio-button--primary"
+                onClick={nextTheme ? () => onOpenTheme(nextTheme.number) : onOpenReview}
+                type="button"
+              >
+                {nextTheme ? `Empezar por el Tema ${nextTheme.number} →` : "Ruta principal completada · repasar →"}
+              </button>
+            )}
+            <button className="bio-button bio-button--secondary" onClick={onOpenReview} type="button">
+              Repaso de hoy
+            </button>
             <button className="bio-button bio-button--ghost" onClick={onOpenLab} type="button">
               Ir al laboratorio
             </button>
@@ -186,7 +212,13 @@ function CourseDashboard({
           </div>
           <div>
             <strong>{completedRequired} de {requiredThemes.length} temas</strong>
-            <p>{nextTheme ? `Siguiente: ${nextTheme.title}` : "Ruta principal completada"}</p>
+            <p>
+              {resume
+                ? `Ibas por Tema ${resume.theme.number}${resume.blockTitle ? ` · ${resume.blockTitle}` : ""}`
+                : nextTheme
+                  ? `Siguiente: ${nextTheme.title}`
+                  : "Ruta principal completada"}
+            </p>
           </div>
         </aside>
       </section>
@@ -864,6 +896,7 @@ export default function BioCourse({
   }, []);
 
   const openTheme = (number: number) => {
+    saveLastTheme(number);
     if (number === 1) {
       onOpenCarbon();
       return;

@@ -713,3 +713,32 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
 .backup__msg { font-size: 12px; font-weight: 650; }
 .backup__msg--ok { color: #3f6826; }
 .backup__msg--error { color: #8b3b32; }
+
+/* --- retomar la lectura donde se dejó --- */
+.lr-resume {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin: 0 0 18px;
+  padding: 15px 18px;
+  background: var(--ink);
+  color: var(--white);
+  border-left: 4px solid var(--lime);
+  border-radius: 0 11px 11px 0;
+}
+.lr-resume span {
+  display: block;
+  font: 700 9px var(--font-geist-mono);
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--lime);
+  margin-bottom: 4px;
+}
+.lr-resume b { font-size: 14px; }
+.lr-resume__actions { display: flex; gap: 8px; margin-left: auto; flex-wrap: wrap; }
+
+@media (max-width: 640px) {
+  .lr-resume__actions { margin-left: 0; width: 100%; }
+  .lr-resume__actions .lr-btn { flex: 1; }
+}

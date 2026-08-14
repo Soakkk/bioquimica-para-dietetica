@@ -498,3 +498,22 @@ test("cada pregunta del banco apunta a un tema que existe y tiene id único", ()
     seen.add(question.id);
   }
 });
+
+const place = executeDataModule(readSource("app/reading-place.ts").source);
+
+test("el bloque en curso es el último cuyo comienzo ya has pasado", () => {
+  // Cuatro bloques altos, como los reales del curso.
+  const tops = [0, 6000, 12000, 18000];
+  const vh = 900; // la línea de corte cae 270 px por debajo del scroll
+
+  assert.equal(place.blockIndexAt(tops, 0, vh), 0, "Arriba del todo, primer bloque");
+  assert.equal(place.blockIndexAt(tops, 3000, vh), 0, "A medio primer bloque sigue siendo el primero");
+  assert.equal(place.blockIndexAt(tops, 5800, vh), 1, "El segundo empieza al cruzar la línea, no al asomar");
+  assert.equal(place.blockIndexAt(tops, 17800, vh), 3, "Último bloque");
+  assert.equal(place.blockIndexAt(tops, 99999, vh), 3, "Más allá del final no se sale del rango");
+});
+
+test("la posición de lectura nunca devuelve un índice fuera de los bloques", () => {
+  assert.equal(place.blockIndexAt([], 500, 900), 0, "Sin bloques, índice neutro");
+  assert.equal(place.blockIndexAt([0], -500, 900), 0, "Scroll negativo no rompe el cálculo");
+});
