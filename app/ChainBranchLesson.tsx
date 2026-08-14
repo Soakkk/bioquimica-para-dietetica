@@ -122,7 +122,7 @@ function Molecule({ kind, reveal = false }: { kind: Exercise["diagram"]; reveal?
   </div>;
 }
 
-export default function ChainBranchLesson({ onEarn, onAsk, embedded = false }: { onEarn: (amount: number) => void; onAsk: (text: string) => void; embedded?: boolean }) {
+export default function ChainBranchLesson({ onEarn, embedded = false }: { onEarn: (amount: number) => void; embedded?: boolean }) {
   const [view, setView] = useState<"theory" | "practice">("theory");
   const [index, setIndex] = useState(0);
   const [picked, setPicked] = useState<number | null>(null);
@@ -209,7 +209,7 @@ export default function ChainBranchLesson({ onEarn, onAsk, embedded = false }: {
 
       <div className="arm-trick"><div><span>TRUCO PARA UNA INTERSECCIÓN</span><h3>Cuenta los tres brazos</h3><p>En un único punto de unión, un camino continuo puede entrar por un brazo y salir por otro. Elige los <b>dos brazos más largos</b> y suma también el carbono central. El tercer brazo queda como sustituyente.</p></div><div className="arm-equation"><span>brazo largo</span><b>+</b><span>CH central</span><b>+</b><span>brazo largo</span><strong>= cadena principal</strong></div></div>
 
-      <div className="branch-theory-actions"><button className="ask-theory" onClick={() => onAsk("Explícame con letras por qué al redibujar una molécula ramificada no se crean enlaces nuevos y cómo elijo los dos brazos de la cadena principal.")}>¿Todavía tienes dudas? Preguntar al tutor</button><button className="primary" onClick={() => { setView("practice"); go(0); }}>Empezar ejercicios →</button></div>
+      <div className="branch-theory-actions"><button className="primary" onClick={() => { setView("practice"); go(0); }}>Empezar ejercicios →</button></div>
     </div> : <div className="branch-practice">
       <header className="branch-practice-head"><div><span>ENTRENAMIENTO GUIADO</span><h2>Cadena principal y sustituyentes</h2></div><label><input type="checkbox" checked={autoNext} onChange={(e) => setAutoNext(e.target.checked)}/> Continuar automáticamente</label></header>
       <div className="branch-exercise-map">{exercises.map((exercise, i) => <button key={`${exercise.title}-${i}`} onClick={() => go(i)} className={`${i === index ? "current" : ""} ${completed.includes(i) ? "done" : ""}`}><span>{completed.includes(i) ? "✓" : i + 1}</span><b>{["Longitud","Seguimiento","Nombre","Rama","Numeración","Brazos","Nombre","Error típico","Varias ramas"][i]}</b></button>)}</div>
@@ -220,7 +220,7 @@ export default function ChainBranchLesson({ onEarn, onAsk, embedded = false }: {
         <div className="branch-answer-grid">{current.options.map((option, i) => <button key={option} onClick={() => { setPicked(i); setFeedback(null); }} className={`${picked === i ? "picked" : ""} ${feedback && i === current.answer ? "right" : ""} ${feedback === "wrong" && picked === i ? "wrong" : ""}`}><span>{String.fromCharCode(65 + i)}</span><b>{option}</b></button>)}</div>
         {hint && !feedback && <div className="branch-hint"><b>PISTA</b>{current.hint}</div>}
         {feedback && <div className={`branch-feedback ${feedback}`}><span>{feedback === "correct" ? "✓" : "↺"}</span><div><b>{feedback === "correct" ? "Correcto · +12 XP" : "Todavía no: sigue los enlaces"}</b><p>{current.explain}</p>{feedback === "correct" && autoNext && index < exercises.length - 1 && <small>Siguiente ejercicio automáticamente…</small>}</div></div>}
-        <div className="branch-actions"><button disabled={index === 0} onClick={() => go(index - 1)}>← Anterior</button><button onClick={() => setHint(true)}>✦ Pista</button><button onClick={() => onAsk(`Ayúdame con este ejercicio de cadena principal sin darme la respuesta directamente: ${current.prompt}`)}>Preguntar al tutor</button>{feedback === "correct" ? <button className="primary" onClick={() => index < exercises.length - 1 ? go(index + 1) : setView("theory")}>{index < exercises.length - 1 ? "Siguiente →" : "Repasar teoría"}</button> : <button className="primary" disabled={picked === null} onClick={check}>Comprobar</button>}</div>
+        <div className="branch-actions"><button disabled={index === 0} onClick={() => go(index - 1)}>← Anterior</button><button onClick={() => setHint(true)}>✦ Pista</button>{feedback === "correct" ? <button className="primary" onClick={() => index < exercises.length - 1 ? go(index + 1) : setView("theory")}>{index < exercises.length - 1 ? "Siguiente →" : "Repasar teoría"}</button> : <button className="primary" disabled={picked === null} onClick={check}>Comprobar</button>}</div>
       </article>
     </div>}
   </section>;

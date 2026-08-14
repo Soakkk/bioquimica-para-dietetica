@@ -22,7 +22,6 @@ type BioCourseProps = {
   onOpenCarbon: () => void;
   onOpenLab: () => void;
   onOpenReview: () => void;
-  onAsk: (text: string) => void;
 };
 
 type AnswerMap = Record<string, string[]>;
@@ -640,8 +639,7 @@ function ThemeQuiz({
   const submitQuiz = () => {
     setSubmittedScore(score);
     onComplete(score);
-    if (score >= 80) onContinue();
-    else {
+    if (score < 80) {
       const firstWrong = questions.findIndex((item) => !correct[item.id]);
       if (firstWrong >= 0) setCurrentIndex(firstWrong);
     }
@@ -732,11 +730,17 @@ function ThemeQuiz({
           onClick={submitQuiz}
           type="button"
         >
-          {score >= 80 ? "Completar y continuar →" : "Guardar y repetir fallos"}
+          {score >= 80 ? "Guardar resultado" : "Guardar y repetir fallos"}
         </button>
       </div>
-      {submittedScore !== null && submittedScore < 80 ? (
-        <p className="bio-quiz__submitted" role="status">Resultado guardado: {submittedScore}%. Empieza por la pregunta marcada.</p>
+      {submittedScore !== null ? (
+        <div className="bio-quiz__submitted">
+          <p role="status">{submittedScore >= 80 ? `Resultado guardado: ${submittedScore}%. Revisa la lista de dominio antes de avanzar.` : `Resultado guardado: ${submittedScore}%. Empieza por la pregunta marcada.`}</p>
+          {submittedScore >= 80 ? <div className="bio-quiz__submitted-actions">
+            <button className="bio-button bio-button--ghost" onClick={() => document.getElementById("bio-mastery-title")?.scrollIntoView({ behavior: "smooth", block: "start" })} type="button">Revisar lo que debo dominar ↓</button>
+            <button className="bio-button bio-button--primary" onClick={onContinue} type="button">Ir al siguiente tema →</button>
+          </div> : null}
+        </div>
       ) : null}
     </section>
   );
@@ -746,12 +750,10 @@ function DieteticsCase({
   theme,
   revealed,
   onReveal,
-  onAsk,
 }: {
   theme: CourseTheme;
   revealed: boolean;
   onReveal: () => void;
-  onAsk: (text: string) => void;
 }) {
   return (
     <section className="bio-case" aria-labelledby="bio-case-title">
@@ -761,13 +763,6 @@ function DieteticsCase({
       <div className="bio-case__actions">
         <button aria-expanded={revealed} className="bio-button bio-button--primary" onClick={onReveal} type="button">
           {revealed ? "Ocultar razonamiento" : "He razonado · ver solución"}
-        </button>
-        <button
-          className="bio-button bio-button--ghost"
-          onClick={() => onAsk(`Estoy en el caso de Dietética del Tema ${theme.number}: ${theme.dieteticsCase.prompt} Ayúdame con preguntas, sin darme directamente la solución.`)}
-          type="button"
-        >
-          Razonarlo con el tutor
         </button>
       </div>
       {revealed ? (
@@ -789,7 +784,6 @@ function ThemeLesson({
   onComplete,
   onEarn,
   onOpenLab,
-  onAsk,
 }: {
   theme: CourseTheme;
   completedThemes: number[];
@@ -798,7 +792,6 @@ function ThemeLesson({
   onComplete: (themeId: number, score: number) => void;
   onEarn: (n: number, awardId?: string) => void;
   onOpenLab: () => void;
-  onAsk: (text: string) => void;
 }) {
   const [revealedRecall, setRevealedRecall] = useState<string[]>([]);
   const [caseRevealed, setCaseRevealed] = useState(false);
@@ -819,12 +812,6 @@ function ThemeLesson({
         </button>
         <div className="bio-lesson-toolbar__actions">
           <button onClick={onOpenLab} type="button">Abrir laboratorio</button>
-          <button
-            onClick={() => onAsk(`Estoy estudiando el Tema ${theme.number}, «${theme.title}». Explícame el concepto que te pregunte conectándolo con esta lección y hazme una comprobación breve al final.`)}
-            type="button"
-          >
-            Preguntar al tutor
-          </button>
         </div>
       </div>
 
@@ -897,13 +884,6 @@ function ThemeLesson({
                   <PriorityBadge priority={block.priority} />
                   <h3>{block.title}</h3>
                 </div>
-                <button
-                  className="bio-text-button"
-                  onClick={() => onAsk(`Estoy en el Tema ${theme.number}, bloque «${block.title}». La idea clave dice: ${block.keyIdea} Explícamelo paso a paso y después comprueba si lo he entendido.`)}
-                  type="button"
-                >
-                  Preguntar sobre este bloque
-                </button>
               </div>
 
               <div className="bio-theory-block__text">
@@ -943,7 +923,6 @@ function ThemeLesson({
       />
 
       <DieteticsCase
-        onAsk={onAsk}
         onReveal={() => setCaseRevealed((value) => !value)}
         revealed={caseRevealed}
         theme={theme}
@@ -990,13 +969,6 @@ function ThemeLesson({
 
       <footer className="bio-lesson-footer">
         <button className="bio-back-button" onClick={onBack} type="button">← Volver a mi ruta</button>
-        <button
-          className="bio-button bio-button--ghost"
-          onClick={() => onAsk(`Quiero repasar en conjunto el Tema ${theme.number}, «${theme.title}». Hazme preguntas escalonadas y céntrate en mis errores.`)}
-          type="button"
-        >
-          Hacer un repaso oral con el tutor
-        </button>
       </footer>
     </main>
   );
@@ -1010,7 +982,6 @@ export default function BioCourse({
   onOpenCarbon,
   onOpenLab,
   onOpenReview,
-  onAsk,
 }: BioCourseProps) {
   const [activeThemeNumber, setActiveThemeNumber] = useState<number | null>(null);
   const activeTheme = useMemo(
@@ -1065,7 +1036,6 @@ export default function BioCourse({
       <ThemeLesson
         key={activeTheme.id}
         completedThemes={completedThemes}
-        onAsk={onAsk}
         onBack={backToPlan}
         onComplete={onComplete}
         onEarn={onEarn}

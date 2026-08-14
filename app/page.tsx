@@ -279,6 +279,8 @@ export default function Home() {
   const [showHint, setShowHint] = useState(false);
   const [showChoices, setShowChoices] = useState(false);
   const [courseMapOpen, setCourseMapOpen] = useState(false);
+  const [lessonNotice, setLessonNotice] = useState("");
+  const [lessonReturnQuestion, setLessonReturnQuestion] = useState<number | null>(null);
   const [atoms, setAtoms] = useState<Atom[]>([]);
   const [bonds, setBonds] = useState<Bond[]>([]);
   const [bondOrder, setBondOrder] = useState<1 | 2 | 3>(1);
@@ -288,30 +290,23 @@ export default function Home() {
   const [labReturnQuestion, setLabReturnQuestion] = useState<number | null>(null);
   const [labReturnModule, setLabReturnModule] = useState<number | null>(null);
   const [labFeedback, setLabFeedback] = useState<string>("Arrastra un átomo o toca uno de la paleta para empezar.");
-  const [tutorOpen, setTutorOpen] = useState(false);
-  const [tutorInput, setTutorInput] = useState("");
-  const [tutorMessages, setTutorMessages] = useState<{ role: "user" | "tutor"; text: string }[]>([
-    { role: "tutor", text: "¡Hola! Soy tu tutor de Bioquímica para Dietética. Dime qué concepto no te cuadra y lo conectamos paso a paso con lo que ya sabes." },
-  ]);
   const [hydrated, setHydrated] = useState(false);
   const canvasRef = useRef<HTMLDivElement>(null);
   const dragging = useRef<{ id: number; dx: number; dy: number } | null>(null);
-  const tutorInputRef = useRef<HTMLInputElement>(null);
-  const tutorLaunchRef = useRef<HTMLButtonElement>(null);
   const xpAwardsRef = useRef<Set<string>>(new Set());
   const labCheckLockedRef = useRef(false);
 
   useEffect(() => {
     const readRecord = (key: string): Record<string, unknown> | null => {
-      const raw = localStorage.getItem(key);
-      if (!raw) return null;
       try {
+        const raw = localStorage.getItem(key);
+        if (!raw) return null;
         const parsed: unknown = JSON.parse(raw);
         if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) return parsed as Record<string, unknown>;
+        localStorage.removeItem(key);
       } catch {
-        // Solo se descarta el registro dañado; el resto del progreso sigue intacto.
+        try { localStorage.removeItem(key); } catch { /* almacenamiento no disponible */ }
       }
-      localStorage.removeItem(key);
       return null;
     };
     const numberList = (value: unknown, max?: number) => Array.isArray(value)
@@ -319,46 +314,57 @@ export default function Home() {
       : [];
     const safeXp = (value: unknown) => typeof value === "number" && Number.isFinite(value) && value >= 0 ? Math.floor(value) : 0;
 
-    try {
-      const carbonData = readRecord("carbon-lab-progress");
-      if (carbonData) {
-        setCompleted(numberList(carbonData.completed, modules.length - 1));
-        setSolved(numberList(carbonData.solved));
-        setXp(safeXp(carbonData.xp));
-      }
-      const globalData = readRecord("bioquimica-dietetica-progress-v1");
-      if (globalData) {
-        setCompletedThemes(numberList(globalData.completedThemes, 12).filter((item) => item >= 1));
-        const scores: Record<number, number> = {};
-        if (globalData.themeScores && typeof globalData.themeScores === "object" && !Array.isArray(globalData.themeScores)) {
-          Object.entries(globalData.themeScores).forEach(([key, value]) => {
-            const theme = Number(key);
-            if (Number.isInteger(theme) && theme >= 1 && theme <= 12 && typeof value === "number" && Number.isFinite(value)) scores[theme] = Math.max(0, Math.min(100, Math.round(value)));
-          });
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (cancelled) return;
+      try {
+        const carbonData = readRecord("carbon-lab-progress");
+        const carbonCompleted = carbonData ? numberList(carbonData.completed, modules.length - 1) : [];
+        if (carbonData) {
+          setCompleted(carbonCompleted);
+          setSolved(numberList(carbonData.solved));
+          setXp(safeXp(carbonData.xp));
         }
-        setThemeScores(scores);
-        const awards = Array.isArray(globalData.xpAwards)
-          ? Array.from(new Set(globalData.xpAwards.filter((item): item is string => typeof item === "string" && item.length > 0 && item.length < 120)))
-          : [];
-        xpAwardsRef.current = new Set(awards);
-        setXpAwards(awards);
-        setXp((value) => Math.max(value, safeXp(globalData.xp)));
-      }
-      const hash = window.location.hash;
-      if (hash === "#carbono") setMode("learn");
-      else if (hash === "#repaso") setMode("practice");
-      else if (hash === "#laboratorio") setMode("lab");
-      else if (hash === "#nomenclatura") setMode("nomenclature");
-      else setMode("program");
-    } finally { setHydrated(true); }
+        const globalData = readRecord("bioquimica-dietetica-progress-v1");
+        if (globalData) {
+          const savedThemes = numberList(globalData.completedThemes, 12).filter((item) => item >= 1);
+          setCompletedThemes(savedThemes.filter((item) => item !== 1 || carbonCompleted.length === modules.length));
+          const scores: Record<number, number> = {};
+          if (globalData.themeScores && typeof globalData.themeScores === "object" && !Array.isArray(globalData.themeScores)) {
+            Object.entries(globalData.themeScores).forEach(([key, value]) => {
+              const theme = Number(key);
+              if (Number.isInteger(theme) && theme >= 1 && theme <= 12 && typeof value === "number" && Number.isFinite(value)) scores[theme] = Math.max(0, Math.min(100, Math.round(value)));
+            });
+          }
+          setThemeScores(scores);
+          const awards = Array.isArray(globalData.xpAwards)
+            ? Array.from(new Set(globalData.xpAwards.filter((item): item is string => typeof item === "string" && item.length > 0 && item.length < 120)))
+            : [];
+          xpAwardsRef.current = new Set(awards);
+          setXpAwards(awards);
+          setXp((value) => Math.max(value, safeXp(globalData.xp)));
+        }
+        const hash = window.location.hash;
+        if (hash === "#carbono") setMode("learn");
+        else if (hash === "#repaso") setMode("practice");
+        else if (hash === "#laboratorio") setMode("lab");
+        else if (hash === "#nomenclatura") setMode("nomenclature");
+        else setMode("program");
+      } catch {
+        // El curso permanece utilizable sin persistencia local.
+      } finally { if (!cancelled) setHydrated(true); }
+    });
+    return () => { cancelled = true; };
   }, []);
 
   useEffect(() => {
-    if (hydrated) localStorage.setItem("carbon-lab-progress", JSON.stringify({ completed, solved, xp }));
+    if (!hydrated) return;
+    try { localStorage.setItem("carbon-lab-progress", JSON.stringify({ completed, solved, xp })); } catch { /* progreso solo en memoria */ }
   }, [completed, solved, xp, hydrated]);
 
   useEffect(() => {
-    if (hydrated) localStorage.setItem("bioquimica-dietetica-progress-v1", JSON.stringify({ completedThemes, themeScores, xp, xpAwards, updatedAt: new Date().toISOString() }));
+    if (!hydrated) return;
+    try { localStorage.setItem("bioquimica-dietetica-progress-v1", JSON.stringify({ completedThemes, themeScores, xp, xpAwards, updatedAt: new Date().toISOString() })); } catch { /* progreso solo en memoria */ }
   }, [completedThemes, themeScores, xp, xpAwards, hydrated]);
 
   useEffect(() => {
@@ -375,22 +381,11 @@ export default function Home() {
     return () => window.removeEventListener("popstate", onPopState);
   }, []);
 
-  useEffect(() => {
-    if (!tutorOpen) return;
-    queueMicrotask(() => tutorInputRef.current?.focus());
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key !== "Escape") return;
-      setTutorOpen(false);
-      queueMicrotask(() => tutorLaunchRef.current?.focus());
-    };
-    window.addEventListener("keydown", closeOnEscape);
-    return () => window.removeEventListener("keydown", closeOnEscape);
-  }, [tutorOpen]);
-
   const carbonThemeDone = completed.length === modules.length;
   const globalThemeCount = new Set([...completedThemes, ...(carbonThemeDone ? [1] : [])]).size;
   const courseProgress = Math.round(globalThemeCount / 12 * 100);
   const currentModule = modules[moduleId];
+  const themeOneReadyAfterCurrent = new Set([...completed, moduleId]).size === modules.length;
   const indexedQuestions = questions.map((q, i) => ({ ...q, globalIndex: i }));
   const lessonQuestions = indexedQuestions.filter((q) => questionTheory[q.globalIndex] === moduleId);
   const levelQuestions = indexedQuestions.filter((q) => practiceModuleFilter !== null ? questionTheory[q.globalIndex] === practiceModuleFilter : q.level === level);
@@ -417,18 +412,28 @@ export default function Home() {
   }
 
   function markModule() {
-    if (!completed.includes(moduleId)) { setCompleted((v) => [...v, moduleId]); earn(15); }
-    if (moduleId === modules.length - 1 && !completedThemes.includes(1)) setCompletedThemes((value) => [...value, 1]);
+    const nextCompleted = new Set([...completed, moduleId]);
+    if (!completed.includes(moduleId)) { setCompleted((v) => [...v, moduleId]); earn(15, `theme-1:module:${moduleId}`); }
     if (moduleId < modules.length - 1) {
+      setLessonNotice("");
       setModuleId(moduleId + 1);
       setTimeout(() => document.getElementById("guide")?.scrollIntoView({ behavior: "smooth" }), 50);
-    } else {
+    } else if (nextCompleted.size === modules.length) {
+      if (!completedThemes.includes(1)) setCompletedThemes((value) => [...value, 1]);
+      setLessonNotice("");
       switchMode("program");
+    } else {
+      const firstPending = modules.findIndex((module) => !nextCompleted.has(module.id));
+      setLessonNotice(`Has completado esta lección, pero todavía te faltan ${modules.length - nextCompleted.size}. Continuamos por la primera pendiente.`);
+      setModuleId(Math.max(0, firstPending));
+      setTimeout(() => document.getElementById("guide")?.scrollIntoView({ behavior: "smooth" }), 50);
     }
   }
 
   function selectModule(nextModule: number) {
     setModuleId(Math.max(0, Math.min(modules.length - 1, nextModule)));
+    setLessonNotice("");
+    setLessonReturnQuestion(null);
     setCourseMapOpen(false);
     setTimeout(() => document.getElementById("guide")?.scrollIntoView({ behavior: "smooth" }), 50);
   }
@@ -437,7 +442,7 @@ export default function Home() {
     if (picked === null) return;
     if (picked === question.answer) {
       setFeedback("correct");
-      if (!solved.includes(question.globalIndex)) { setSolved((v) => [...v, question.globalIndex]); earn(20); }
+      if (!solved.includes(question.globalIndex)) { setSolved((v) => [...v, question.globalIndex]); earn(20, `theme-1:practice:${question.globalIndex}`); }
     } else setFeedback("wrong");
   }
 
@@ -459,6 +464,7 @@ export default function Home() {
   function startLabActivity() {
     setTargetAt(0);
     clearLab();
+    setLessonReturnQuestion(null);
     setLabReturnQuestion(question.globalIndex);
     setLabReturnModule(null);
     setMode("lab");
@@ -470,6 +476,7 @@ export default function Home() {
   function startLessonLab(targetIndex: number) {
     setTargetAt(targetIndex);
     clearLab();
+    setLessonReturnQuestion(null);
     setLabReturnQuestion(null);
     setLabReturnModule(moduleId);
     setMode("lab");
@@ -481,11 +488,19 @@ export default function Home() {
   function startLessonQuestionLab(globalIndex: number) {
     const formula = questions[globalIndex]?.formula ?? "CH₄";
     const targetIndex = formula.includes("C₂H₄") ? 4 : formula.includes("C₂H₂") ? 5 : formula.includes("C₂H₆") ? 3 : formula.includes("H₂O") ? 1 : formula.includes("NH₃") ? 2 : 0;
-    startLessonLab(targetIndex);
+    setTargetAt(targetIndex);
+    clearLab();
+    setLabReturnQuestion(globalIndex);
+    setLabReturnModule(moduleId);
+    setLessonReturnQuestion(globalIndex);
+    setMode("lab");
+    setTool("bond");
+    setLabFeedback(`Ejercicio ${globalIndex + 1}: construye ${labTargets[targetIndex].formula}. Cuando sea correcto, quedará registrado y volverás a esta lección.`);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   function solveInline(globalIndex: number) {
-    if (!solved.includes(globalIndex)) { setSolved((value) => [...value, globalIndex]); earn(20); }
+    if (!solved.includes(globalIndex)) { setSolved((value) => [...value, globalIndex]); earn(20, `theme-1:inline:${globalIndex}`); }
   }
 
   function addAtom(element: ElementKey, x?: number, y?: number) {
@@ -568,8 +583,20 @@ export default function Home() {
     labCheckLockedRef.current = true;
     setLabFeedback(`✓ ¡${currentTarget.name} correcto! Todas las valencias y enlaces encajan.`);
     if (labReturnQuestion !== null) {
-      if (!solved.includes(labReturnQuestion)) { setSolved((v) => [...v, labReturnQuestion]); earn(25, `lab:question:${labReturnQuestion}`); }
-      setTimeout(() => { setLabReturnQuestion(null); setMode("practice"); nextQuestion(); }, 1600);
+      const returnQuestion = labReturnQuestion;
+      if (!solved.includes(returnQuestion)) { setSolved((v) => [...v, returnQuestion]); earn(25, `lab:question:${returnQuestion}`); }
+      if (labReturnModule !== null) {
+        const returnTo = labReturnModule;
+        setTimeout(() => {
+          setLabReturnQuestion(null);
+          setLabReturnModule(null);
+          setModuleId(returnTo);
+          setMode("learn");
+          setTimeout(() => document.getElementById("lesson-practice")?.scrollIntoView({ behavior: "smooth" }), 50);
+        }, 1600);
+      } else {
+        setTimeout(() => { setLabReturnQuestion(null); setMode("practice"); nextQuestion(); }, 1600);
+      }
     } else if (labReturnModule !== null) {
       earn(25, `lab:theme-1:module:${labReturnModule}:target:${targetAt}`);
       const returnTo = labReturnModule;
@@ -595,53 +622,8 @@ export default function Home() {
     setThemeScores((value) => ({ ...value, [themeId]: Math.max(value[themeId] ?? 0, score) }));
     if (score >= 80 && !completedThemes.includes(themeId)) {
       setCompletedThemes((value) => [...value, themeId]);
-      earn(40);
+      earn(40, `theme:${themeId}:complete`);
     }
-  }
-
-  function tutorReply(raw: string) {
-    const q = raw.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-    if (/mas facil|otro ejemplo|no lo entiendo/.test(q)) return "Vamos a reducirlo a tres preguntas: ¿qué molécula entra?, ¿qué cambio químico ocurre? y ¿qué producto sale? Escríbeme además el nombre del concepto —por ejemplo, glucólisis, enlace peptídico o micela— y te lo reconstruyo desde cero con un ejemplo.";
-    if (/conecta.*dietetica|aplica.*dietetica|para que sirve.*dietetica/.test(q)) return "En Dietética la estructura ayuda a predecir digestión y transporte; las rutas explican qué ocurre tras comer o ayunar; y los micronutrientes cobran sentido al ver la reacción en la que colaboran. Dime el concepto concreto y trazaremos el recorrido desde el alimento hasta su efecto metabólico.";
-    if (/nadh|fadh2|fadh|cadena respiratoria|fosforilacion oxidativa|atp por/.test(q)) return "Usaremos los valores actuales aproximados: cada NADH permite formar unas 2,5 moléculas de ATP y cada FADH₂ unas 1,5. Por eso la oxidación completa de una glucosa suele estimarse en 30–32 ATP, no en los 36–38 de esquemas antiguos.";
-    if (/glucolisis|piruvato|acetil.?coa|krebs|ciclo del citrato/.test(q)) return "Piensa en una ruta conectada: la glucólisis transforma glucosa en piruvato en el citosol; con oxígeno, el piruvato se convierte en acetil-CoA; su grupo acetilo entra en el ciclo de Krebs y los electrones captados por NADH y FADH₂ alimentan la fosforilación oxidativa.";
-    if (/saturad|insaturad|doble enlace.*grasa|grasa.*doble enlace|omega.?3|omega.?6|trans/.test(q)) return "En un ácido graso, saturado significa que su cadena no tiene C=C; monoinsaturado, que tiene uno; y poliinsaturado, que tiene varios. El número omega cuenta desde el extremo metilo hasta el primer doble enlace. Cis/trans describe la disposición alrededor de C=C, no la cantidad de dobles enlaces.";
-    if (/lipido|triglicer|acido graso|beta.?oxid|cuerpo.? ceton|cetosis/.test(q)) return "Un triglicérido es glicerol unido por tres enlaces éster a tres ácidos grasos. En la digestión se hidrolizan esos ésteres; después, los ácidos grasos pueden degradarse por beta-oxidación a acetil-CoA. Si el hígado acumula mucho acetil-CoA, puede fabricar cuerpos cetónicos; los produce, pero no los utiliza como combustible.";
-    if (/glucid|hidrato.? de carbono|monosacar|disacar|almidon|glucogeno|fibra/.test(q)) return "Ordénalos por tamaño: monosacáridos como glucosa; disacáridos como lactosa; y polisacáridos como almidón o glucógeno. La digestión rompe enlaces glucosídicos hasta unidades absorbibles. La fibra escapa total o parcialmente a nuestras enzimas y modifica tránsito, microbiota y respuesta glucémica.";
-    if (/digestion|absorcion|sglt1|glut5|pept1|quilomicron|micela/.test(q)) return "Digestión es romper moléculas; absorción es atravesar el epitelio intestinal. Glucosa y galactosa entran sobre todo por SGLT1, fructosa por GLUT5; di- y tripéptidos pueden entrar por PEPT1; los lípidos necesitan bilis, micelas y, para la mayor parte de la grasa de cadena larga, salida en quilomicrones.";
-    if (/proteina|aminoacido|enzima|desnaturaliz|estructura primaria|estructura secundaria/.test(q)) return "Los aminoácidos se unen por enlaces peptídicos para formar proteínas. La secuencia es la estructura primaria; los plegamientos posteriores crean las estructuras secundaria, terciaria y, a veces, cuaternaria. Desnaturalizar suele alterar el plegamiento y la función, no romper la secuencia de enlaces peptídicos.";
-    if (/transamin|desamin|urea|nitrogen|amoniaco/.test(q)) return "El grupo amino puede transferirse mediante transaminación. El nitrógeno que sobra termina en gran parte como amoníaco y después como urea en el hígado, una forma mucho menos tóxica que viaja a los riñones para eliminarse.";
-    if (/adn|arn|nucleot|replicacion|transcripcion|traduccion/.test(q)) return "Un nucleótido contiene pentosa, fosfato y base nitrogenada. El ADN almacena información; la transcripción produce ARN a partir de ADN y la traducción usa el ARN mensajero para ordenar aminoácidos en una proteína.";
-    if (/vitamina|coenzima|hidrosoluble|liposoluble/.test(q)) return "Las vitaminas no aportan energía, pero muchas ayudan a que las rutas funcionen como partes de coenzimas. A, D, E y K son liposolubles; las del grupo B y la C son hidrosolubles. En la app distinguimos función, fuentes, déficit y precauciones sin convertir cifras antiguas del libro en reglas universales.";
-    if (/agua|osmosis|osmolar|sodio|potasio|electrolit|mineral/.test(q)) return "El agua se desplaza según gradientes osmóticos y los iones están distribuidos de forma desigual: el sodio predomina fuera de la célula y el potasio dentro. Esa separación, mantenida entre otros mecanismos por la Na⁺/K⁺-ATPasa, es esencial para volumen, impulsos nerviosos y contracción muscular.";
-    if (/electrones? de valencia|que es valencia|valencia y/.test(q)) return "Son conceptos distintos: los electrones de valencia son los electrones que el átomo SÍ tiene en su capa externa; la valencia indica cuántos enlaces suele formar. En el carbono ambos números suelen ser 4, y por eso se confunden.";
-    if (/octeto|ocho electrones|8 electrones/.test(q)) return "La regla del octeto dice que muchos átomos de C, N y O son especialmente estables cuando cuentan 8 electrones a su alrededor. No significa que siempre se queden con electrones ajenos: en un enlace covalente los comparten.";
-    if (/simple|doble|triple|rayas?/.test(q)) return "Cuenta rayas: — vale 1, = vale 2 y ≡ vale 3. En CH₂=CH₂, cada C suma 2 enlaces C—H y 2 del C=C: total 4. En HC≡CH suma 1 + 3: también 4.";
-    if (/localizador|sustituyente|rama|di-|tri-|tetra-/.test(q)) return "Un localizador es un número que funciona como una dirección dentro de la cadena: señala dónde comienza C=C o C≡C, qué carbono lleva OH o dónde se conecta una rama. Un sustituyente es una rama que queda fuera de la cadena principal: —CH₃ se llama metil y —CH₂—CH₃, etil. En 2-metilbutano, el 2 localiza la rama metil sobre el carbono 2 de una cadena principal de cuatro carbonos.";
-    if (/ch3|metilo/.test(q)) return "CH₃ tiene tres enlaces C—H, pero puede tener un cuarto enlace que aparece fuera del grupo. En CH₃—CH₃, la raya entre ambos carbonos completa la cuenta: 3 + 1 = 4. CH₃ aislado no representa el etano completo.";
-    if (/primario|secundario|terciario|cuaternario|grado del carbono/.test(q)) return "Aquí no cuentas todas las rayas: cuentas únicamente cuántos carbonos tocan directamente al carbono estudiado. 1 vecino C = primario; 2 = secundario; 3 = terciario; 4 = cuaternario.";
-    if (/alcano|alqueno|alquino/.test(q)) return "Mira el enlace entre carbonos: alcano solo tiene simples (-ano), alqueno contiene al menos un doble (-eno) y alquino al menos un triple (-ino). Para 2 carbonos: etano CH₃—CH₃, eteno CH₂=CH₂ y etino HC≡CH.";
-    if (/nomenclatura|prefijo|sufijo|localizador|como se nombra|nombre de/.test(q)) return "Separa el nombre en piezas: 1) el prefijo indica la longitud de la cadena (met-, et-, prop-, but-, pent-), 2) el número localiza el enlace o grupo y 3) el sufijo identifica la familia (-ano, -eno, -ino, -ol, -al, -ona, -oico). Después dibuja el esqueleto y completa la tetravalencia del carbono.";
-    if (/alcohol|fenol|eter/.test(q)) return "Los tres contienen O, pero conectado de forma diferente: alcohol R—OH; fenol, un —OH unido directamente a un anillo aromático; éter R—O—R′. Busca primero qué hay a cada lado del oxígeno.";
-    if (/aldehido|cetona/.test(q)) return "Ambos contienen C=O. Si el carbonilo está al final y aparece como —CHO, es aldehído. Si está entre dos carbonos, R—CO—R′, es cetona.";
-    if (/acido|ester|carbox/.test(q)) return "El ácido carboxílico contiene —C(=O)—OH. En un éster, el H del —OH se sustituye por otro grupo carbonado: —C(=O)—O—R′. Esa pequeña diferencia cambia la familia.";
-    if (/amina|amida|peptid/.test(q)) return "Una amina sencilla contiene R—NH₂. Una amida tiene un carbonilo junto al N: R—C(=O)—NH₂. El enlace peptídico de las proteínas es precisamente una amida.";
-    if (/isomer/.test(q)) return "Dos isómeros tienen exactamente la misma fórmula molecular, pero distinta estructura o disposición espacial. Primer paso: cuenta C, H, O… Si las cantidades no coinciden, no son isómeros.";
-    if (/formula molecular|semidesarrollada|desarrollada|empirica/.test(q)) return "La molecular solo cuenta átomos (C₂H₆); la semidesarrollada muestra grupos y enlaces importantes (CH₃—CH₃); la desarrollada dibuja todos los enlaces. La empírica reduce la proporción al mínimo: para C₂H₆ sería CH₃.";
-    return "Vamos a usar el método universal: 1) identifica cada átomo, 2) cuenta las rayas que salen de él, 3) compara con C=4, H=1, O=2 y N=3, y 4) localiza el grupo funcional. Si me escribes la fórmula o el nombre concreto que te confunde, podré guiarte mejor.";
-  }
-
-  function askTutor(text = tutorInput) {
-    const clean = text.trim();
-    if (!clean) return;
-    setTutorMessages((v) => [...v, { role: "user", text: clean }, { role: "tutor", text: tutorReply(clean) }]);
-    setTutorInput("");
-    setTutorOpen(true);
-  }
-
-  function closeTutor() {
-    setTutorOpen(false);
-    queueMicrotask(() => tutorLaunchRef.current?.focus());
   }
 
   return (
@@ -667,7 +649,6 @@ export default function Home() {
         onOpenCarbon={() => switchMode("learn")}
         onOpenLab={() => { setLabReturnModule(null); setLabReturnQuestion(null); switchMode("lab"); }}
         onOpenReview={() => { setPracticeModuleFilter(null); setPracticeView("routes"); setQuestionAt(0); switchMode("practice"); }}
-        onAsk={askTutor}
       />}
 
       {mode === "learn" && <>
@@ -717,7 +698,12 @@ export default function Home() {
                 {section.paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
                 {section.worked && <div className="worked-example"><div><span>EJEMPLO RESUELTO</span><b>{section.worked.title}</b></div><Formula text={section.worked.formula}/><ol>{section.worked.steps.map((step, i) => <li key={step}><span>{i + 1}</span><p>{step}</p></li>)}</ol></div>}
               </section>)}
-              {(moduleId === 2 || moduleId === 3) && <CourseDepth key={moduleId} moduleId={moduleId} onPractice={() => document.getElementById("lesson-practice")?.scrollIntoView({ behavior: "smooth" })} onBranches={() => document.getElementById("branch-embedded")?.scrollIntoView({ behavior: "smooth" })} onAsk={askTutor}/>}
+              {(moduleId === 2 || moduleId === 3) && <CourseDepth
+                key={moduleId}
+                moduleId={moduleId}
+                onPractice={() => document.getElementById("lesson-practice")?.scrollIntoView({ behavior: "smooth" })}
+                onBranches={() => document.getElementById("branch-embedded")?.scrollIntoView({ behavior: "smooth" })}
+              />}
             </div>
             <h3 className="visual-summary-title">Paso 2 · Resumen y ejemplos antes de practicar</h3>
             <div className="lesson-columns">
@@ -726,12 +712,13 @@ export default function Home() {
             </div>
             {moduleId === 4 && <div className="group-map">{functionalGroups.map((g) => <div key={g[0]}><span>{g[0]}</span><b>{g[1]}</b><small>{g[2]}</small></div>)}</div>}
             {moduleId === 1 && <div className="degree-compare"><div><b>¿Cuántos enlaces suma?</b><strong>Valencia</strong><p>Cuenta rayas: — vale 1, = vale 2 y ≡ vale 3.</p></div><span>≠</span><div><b>¿A cuántos C toca?</b><strong>Grado</strong><p>1 C = primario; 2 = secundario; 3 = terciario; 4 = cuaternario.</p></div></div>}
-            <InlineLessonPractice key={moduleId} moduleId={moduleId} moduleTitle={currentModule.title} questions={lessonQuestions} solved={solved} onSolve={solveInline} onAsk={askTutor} onOpenLab={startLessonQuestionLab}/>
-            {moduleId === 2 && <div id="branch-embedded"><ChainBranchLesson key={`branches-${resetEpoch}`} embedded onEarn={earn} onAsk={askTutor}/></div>}
+            <InlineLessonPractice key={moduleId} moduleId={moduleId} moduleTitle={currentModule.title} questions={lessonQuestions} solved={solved} initialGlobalIndex={lessonReturnQuestion} onSolve={solveInline} onOpenLab={startLessonQuestionLab}/>
+            {moduleId === 2 && <div id="branch-embedded"><ChainBranchLesson key={`branches-${resetEpoch}`} embedded onEarn={earn}/></div>}
             {(moduleId === 0 || moduleId === 1 || moduleId === 3) && <section className="lesson-lab-activity"><div><span>PASO 4 · ACTIVIDAD APLICADA</span><h3>Compruébalo construyendo</h3><p>La pizarra se abre con moléculas relacionadas con esta lección y vuelve aquí cuando la estructura sea correcta.</p></div><div>{(moduleId === 0 ? [0,1,2] : moduleId === 1 ? [0,3,4,5] : [3,4,5]).map((targetIndex) => <button key={targetIndex} onClick={() => startLessonLab(targetIndex)}><b>{labTargets[targetIndex].formula}</b><small>{labTargets[targetIndex].name}</small></button>)}</div></section>}
             {(moduleId === 2 || moduleId === 3) && <div className="optional-free-tool"><div><span>PRÁCTICA EXTRA OPCIONAL</span><b>Gimnasio de nomenclatura</b><p>Úsalo después de completar los ejercicios de esta lección si quieres practicar muchas variantes.</p></div><button onClick={() => switchMode("nomenclature")}>Abrir práctica libre →</button></div>}
             <div className="coach-tip"><span>!</span><div><b>Error frecuente</b><p>{currentModule.tip}</p></div></div>
-            <div className="lesson-footer unified-finish"><div><span>PASO 5</span><b>{lessonQuestions.filter((q) => solved.includes(q.globalIndex)).length}/{lessonQuestions.length} ejercicios dominados</b></div><button className="primary" onClick={markModule}>{moduleId === modules.length - 1 ? (completed.includes(moduleId) ? "Volver a mi ruta" : "Terminar Tema 1 · +15 XP") : (completed.includes(moduleId) ? "Ir a la siguiente lección" : "Completar tema · +15 XP")} <span>→</span></button></div>
+            {lessonNotice && <p className="lesson-completion-notice" role="status" aria-live="polite">{lessonNotice}</p>}
+            <div className="lesson-footer unified-finish"><div><span>PASO 5</span><b>{lessonQuestions.filter((q) => solved.includes(q.globalIndex)).length}/{lessonQuestions.length} ejercicios dominados</b></div><button className="primary" onClick={markModule}>{moduleId === modules.length - 1 ? (themeOneReadyAfterCurrent ? (completed.includes(moduleId) ? "Volver a mi ruta" : "Terminar Tema 1 · +15 XP") : (completed.includes(moduleId) ? "Continuar lecciones pendientes" : "Guardar y seguir pendientes · +15 XP")) : (completed.includes(moduleId) ? "Ir a la siguiente lección" : "Completar lección · +15 XP")} <span>→</span></button></div>
           </div>
         </section>
       </>}
@@ -739,7 +726,7 @@ export default function Home() {
       {mode === "practice" && <section className="practice-page">
         <div className="page-intro"><span className="kicker"><i/> {practiceModuleFilter !== null ? "PRÁCTICA RELACIONADA CON LA TEORÍA" : practiceView === "routes" ? "REPASO TEÓRICO Y PRÁCTICO" : "ENTRENAMIENTO ADAPTATIVO"}</span><h1>{practiceModuleFilter !== null ? <>Afianza la<br/><em>lección {practiceModuleFilter + 1}.</em></> : practiceView === "routes" ? <>Relaciona.<br/><em>Aplica. Recuerda.</em></> : "Piensa como un químico."}</h1><p>{practiceModuleFilter !== null ? `Estos ejercicios trabajan únicamente “${modules[practiceModuleFilter].title}”, siguiendo el mismo orden de ideas y ejemplos.` : practiceView === "routes" ? "Repasa grupos de temas que dependen unos de otros y descubre exactamente qué conexión necesitas reforzar." : "No basta con acertar: después de cada respuesta verás la regla que permite deducirla."}</p></div>
         {practiceModuleFilter === null && <div className="practice-view-tabs"><button className={practiceView === "routes" ? "active" : ""} onClick={() => setPracticeView("routes")}><span>01</span><div><b>Repaso por bloques</b><small>Teoría conectada + diagnóstico</small></div></button><button className={practiceView === "free" ? "active" : ""} onClick={() => setPracticeView("free")}><span>02</span><div><b>Ejercicios por nivel</b><small>Práctica rápida y libre</small></div></button></div>}
-        {practiceModuleFilter === null && practiceView === "routes" ? <IntegratedReview key={`review-${resetEpoch}`} onEarn={earn} onAsk={askTutor}/> : <>
+        {practiceModuleFilter === null && practiceView === "routes" ? <IntegratedReview key={`review-${resetEpoch}`} onEarn={earn}/> : <>
         {practiceModuleFilter !== null && <div className="lesson-practice-route"><span>1 · TEORÍA LEÍDA</span><i>→</i><span>2 · EJEMPLOS RESUELTOS</span><i>→</i><b>3 · PRÁCTICA DE LA LECCIÓN</b><button onClick={() => { setModuleId(practiceModuleFilter); setMode("learn"); setTimeout(() => document.getElementById("guide")?.scrollIntoView({ behavior: "smooth" }), 50); }}>← Volver a la teoría</button></div>}
         <div className="level-tabs">{levelNames.map((name, i) => <button key={name} className={practiceModuleFilter === null && level === i + 1 ? "active" : ""} onClick={() => { setPracticeModuleFilter(null); setLevel(i + 1); setQuestionAt(0); setPicked(null); setFeedback(null); setShowHint(false); }}><span>{i + 1}</span><b>{name}</b><small>{questions.filter((q) => q.level === i + 1).length} retos</small></button>)}</div>
         <div className="practice-shell">
@@ -748,7 +735,7 @@ export default function Home() {
             <div className="theory-link"><div><span>ESTÁS PRACTICANDO</span><b>Lección {relatedModule.id + 1} · {relatedModule.title}</b></div><button onClick={openRelatedTheory}>Repasar teoría →</button></div>
             <h2>{question.title}</h2><p>{question.prompt}</p><Formula text={question.formula}/>
             {question.options.length === 1 ? <button className="start-lab-activity" onClick={startLabActivity}><span>🧪</span><div><b>Construir en el laboratorio</b><small>Volverás automáticamente al siguiente reto cuando la molécula sea correcta.</small></div><em>→</em></button> : (practiceModuleFilter === 2 || practiceModuleFilter === 3) && !showChoices ? <div className="active-recall"><span>✎</span><div><b>Primero resuélvelo sin mirar opciones</b><p>{practiceModuleFilter === 2 ? "Escribe el nombre o dibuja la fórmula en papel. La corrección será más útil si produces la respuesta antes de reconocerla." : "Clasifica la estructura y justifica qué enlace o forma de cadena has observado."}</p></div><button onClick={() => setShowChoices(true)}>Ya lo he intentado · ver opciones</button></div> : <div className="answers">{question.options.map((option, i) => <button key={option} onClick={() => { setPicked(i); setFeedback(null); }} className={`${picked === i ? "picked" : ""} ${feedback && i === question.answer ? "right" : ""} ${feedback === "wrong" && picked === i ? "wrong" : ""}`}><span>{String.fromCharCode(65 + i)}</span>{option}</button>)}</div>}
-            {feedback && <div className={`feedback ${feedback}`}><span>{feedback === "correct" ? "✓" : "↺"}</span><div><b>{feedback === "correct" ? "Exacto. +20 XP" : "Todavía no. Revisa la cuenta."}</b><p>{question.explain}</p></div></div>}
+            {feedback && <div className={`feedback ${feedback}`} role="status" aria-live="polite"><span>{feedback === "correct" ? "✓" : "↺"}</span><div><b>{feedback === "correct" ? "Exacto. +20 XP" : "Todavía no. Revisa la cuenta."}</b><p>{question.explain}</p></div></div>}
             {showHint && !feedback && <div className="hint-box">Pista: separa la estructura átomo por átomo y cuenta las rayas que salen de cada uno.</div>}
             {question.options.length > 1 && (!(practiceModuleFilter === 2 || practiceModuleFilter === 3) || showChoices) && <div className="challenge-actions"><button className="hint" onClick={() => setShowHint(true)}>✦ Dame una pista</button>{feedback === "correct" ? <button className="primary" onClick={nextQuestion}>{questionAt === levelQuestions.length - 1 ? practiceModuleFilter !== null ? "Repetir práctica" : level < levelNames.length ? `Continuar al nivel ${level + 1}` : "Volver al inicio" : "Siguiente reto"} →</button> : <button className="primary" disabled={picked === null} onClick={checkAnswer}>Comprobar</button>}</div>}
           </div>
@@ -757,12 +744,11 @@ export default function Home() {
         </>}
       </section>}
 
-      {mode === "nomenclature" && <><div className="context-return"><span>PRÁCTICA EXTRA · LECCIÓN {moduleId + 1}</span><b>Has abierto el gimnasio desde «{currentModule.title}».</b><button onClick={() => { switchMode("learn"); setTimeout(() => document.getElementById("lesson-practice")?.scrollIntoView({ behavior: "smooth" }), 50); }}>← Volver a esta lección</button></div><NomenclatureTrainer key={`nomenclature-${resetEpoch}`} onEarn={earn} onAsk={askTutor}/></>}
+      {mode === "nomenclature" && <><div className="context-return"><span>PRÁCTICA EXTRA · LECCIÓN {moduleId + 1}</span><b>Has abierto el gimnasio desde «{currentModule.title}».</b><button onClick={() => { switchMode("learn"); setTimeout(() => document.getElementById("lesson-practice")?.scrollIntoView({ behavior: "smooth" }), 50); }}>← Volver a esta lección</button></div><NomenclatureTrainer key={`nomenclature-${resetEpoch}`} onEarn={earn}/></>}
 
       {mode === "lab" && <section className="lab-page">
         <div className="page-intro lab-intro"><span className="kicker"><i/> PIZARRA MOLECULAR</span><h1>Construye. Une. Comprueba.</h1><p>Añade los átomos y únelos tocando primero uno y después otro. La guía te indica siempre el siguiente paso.</p></div>
-        {labReturnQuestion !== null && <div className="lab-return-banner"><span>ACTIVIDAD DE LA LECCIÓN {questionTheory[labReturnQuestion] + 1}</span><b>Completa {currentTarget.formula}; volverás al siguiente ejercicio automáticamente.</b></div>}
-        {labReturnModule !== null && <div className="lab-return-banner"><span>ACTIVIDAD DE LA LECCIÓN {labReturnModule + 1}</span><b>Completa {currentTarget.formula}; volverás al mismo punto de la teoría automáticamente.</b></div>}
+        {labReturnQuestion !== null ? <div className="lab-return-banner"><span>ACTIVIDAD DE LA LECCIÓN {questionTheory[labReturnQuestion] + 1}</span><b>Completa {currentTarget.formula}; volverás a este mismo ejercicio, ya marcado como dominado.</b></div> : labReturnModule !== null ? <div className="lab-return-banner"><span>ACTIVIDAD DE LA LECCIÓN {labReturnModule + 1}</span><b>Completa {currentTarget.formula}; volverás al mismo punto de la teoría automáticamente.</b></div> : null}
         <div className="target-bar"><div><span>RETO ACTUAL</span><b>{currentTarget.name} <em>{currentTarget.formula}</em></b></div><div className="target-options">{labTargets.map((t, i) => <button disabled={labReturnQuestion !== null || labReturnModule !== null} className={targetAt === i ? "active" : ""} onClick={() => { setTargetAt(i); clearLab(); }} key={t.name}>{t.formula}</button>)}</div><button className="target-hint" onClick={() => setLabFeedback(`Pista: ${currentTarget.hint}`)}>✦ Pista</button></div>
         <div className="lab-shell">
           <aside className="atom-palette"><span>PASO 1 · AÑADE ÁTOMOS</span>{(["C", "H", "O", "N"] as ElementKey[]).map((e) => <button key={e} draggable onDragStart={(ev) => ev.dataTransfer.setData("element", e)} onClick={() => addAtom(e)} className={`palette-atom atom-${e.toLowerCase()}`}><i>{e}</i><div><b>{e === "C" ? "Carbono" : e === "H" ? "Hidrógeno" : e === "O" ? "Oxígeno" : "Nitrógeno"}</b><small>toca para añadir · valencia {valence[e]}</small></div><em>＋</em></button>)}<div className="palette-note"><b>No hace falta arrastrar</b><p>Toca C, H, O o N y aparecerá en la pizarra. Después podrás moverlo.</p></div></aside>
@@ -793,17 +779,9 @@ export default function Home() {
         </div>
       </section>}
 
-      <button ref={tutorLaunchRef} className="tutor-launch" aria-controls="bio-tutor-panel" aria-expanded={tutorOpen} onClick={() => tutorOpen ? closeTutor() : setTutorOpen(true)} aria-label={tutorOpen ? "Cerrar tutor de bioquímica" : "Abrir tutor de bioquímica"}><span>?</span><div><b>Pregunta al tutor</b><small>Te lo explico paso a paso</small></div></button>
-      {tutorOpen && <aside id="bio-tutor-panel" className="tutor-panel" role="dialog" aria-labelledby="bio-tutor-title">
-        <div className="tutor-head"><div><span>?</span><div><b id="bio-tutor-title">Tutor de Bioquímica</b><small>Conexiones claras · Dietética</small></div></div><button onClick={closeTutor} aria-label="Cerrar tutor">×</button></div>
-        <div className="tutor-context">Ahora estás en: <b>{mode === "program" ? "Ruta completa de Bioquímica" : mode === "learn" ? currentModule.title : mode === "practice" ? `Repaso · ${levelNames[level - 1]}` : mode === "nomenclature" ? "Gimnasio de nomenclatura" : `Laboratorio · ${currentTarget.name}`}</b></div>
-        <div className="tutor-chat" role="log" aria-live="polite">{tutorMessages.map((m, i) => <div className={`tutor-message ${m.role}`} key={i}><span>{m.role === "tutor" ? "C" : "Tú"}</span><p>{m.text}</p></div>)}</div>
-        <div className="tutor-chips"><button onClick={() => askTutor("Explícamelo más fácil con un ejemplo")}>Más fácil</button><button onClick={() => askTutor("¿Cómo se conecta esto con Dietética?")}>Conectar con Dietética</button><button onClick={() => askTutor("¿Por qué el carbono hace 4 enlaces?")}>C hace 4 enlaces</button></div>
-        <form className="tutor-form" onSubmit={(e) => { e.preventDefault(); askTutor(); }}><input ref={tutorInputRef} value={tutorInput} onChange={(e) => setTutorInput(e.target.value)} placeholder="Escribe tu duda o una fórmula…" aria-label="Pregunta para el tutor"/><button type="submit" aria-label="Enviar pregunta">→</button></form>
-      </aside>}
-
       <footer><div><span className="brand-mark">B</span><b>Bioquímica para Dietética</b></div><p>Comprender · relacionar · aplicar</p><button onClick={() => {
-        ["carbon-lab-progress", "bioquimica-dietetica-progress-v1", "carbon-nomenclature-puzzle-v1", "carbon-chain-branch-v1", "carbon-nomenclature-progress-v1", "carbon-integrated-review-v1"].forEach((key) => localStorage.removeItem(key));
+        if (!window.confirm("¿Reiniciar todo el progreso? Se borrarán lecciones, resultados y XP guardados en este navegador.")) return;
+        ["carbon-lab-progress", "bioquimica-dietetica-progress-v1", "carbon-nomenclature-puzzle-v1", "carbon-chain-branch-v1", "carbon-nomenclature-progress-v1", "carbon-integrated-review-v1"].forEach((key) => { try { localStorage.removeItem(key); } catch { /* almacenamiento no disponible */ } });
         xpAwardsRef.current.clear();
         setCompleted([]); setSolved([]); setCompletedThemes([]); setThemeScores({}); setXpAwards([]); setXp(0); setResetEpoch((value) => value + 1);
       }}>Reiniciar progreso</button></footer>

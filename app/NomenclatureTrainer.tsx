@@ -97,7 +97,7 @@ function validStats(value: unknown): Stats {
   return clean;
 }
 
-export default function NomenclatureTrainer({ onEarn, onAsk }: { onEarn: (amount: number) => void; onAsk: (text: string) => void }) {
+export default function NomenclatureTrainer({ onEarn }: { onEarn: (amount: number) => void }) {
   const [activity, setActivity] = useState<"trainer" | "puzzle">("trainer");
   const [difficulty, setDifficulty] = useState<"all" | Difficulty>(1);
   const [family, setFamily] = useState<"Todas" | Family>("Todas");
@@ -244,7 +244,6 @@ export default function NomenclatureTrainer({ onEarn, onAsk }: { onEarn: (amount
             <div className="trainer-actions">
               <button className="back" disabled={index === 0} onClick={() => go(-1)}>← Anterior</button>
               <button className="hint" onClick={() => setHint(true)}>✦ Pista</button>
-              <button className="ask" onClick={() => onAsk(`Explícame paso a paso cómo pasar entre ${current.name} y ${current.formula}. Quiero entender el prefijo, la posición y el sufijo sin memorizar.`)}>Preguntar al tutor</button>
               {feedback === "correct" ? <button className="primary" onClick={() => go(1)}>{index === pool.length - 1 ? "Terminar" : "Siguiente"} →</button> : <button className="primary" disabled={picked === null} onClick={check}>Comprobar</button>}
             </div>
           </article>
@@ -258,6 +257,6 @@ export default function NomenclatureTrainer({ onEarn, onAsk }: { onEarn: (amount
         {weakest && <button onClick={practiceWeakest}>Practicar mi punto débil →</button>}
         <p><i className="score-dot failed"/> Error registrado <i className="score-dot mastered"/> Dominado</p>
       </aside>
-    </div> : <NomenclaturePuzzle onEarn={onEarn} onAsk={onAsk}/>}
+    </div> : <NomenclaturePuzzle onEarn={onEarn}/>}
   </section>;
 }

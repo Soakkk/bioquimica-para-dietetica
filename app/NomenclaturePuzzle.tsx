@@ -60,7 +60,7 @@ function shuffle<T>(items: T[]) {
   return copy;
 }
 
-export default function NomenclaturePuzzle({ onEarn, onAsk }: { onEarn: (amount: number) => void; onAsk: (text: string) => void }) {
+export default function NomenclaturePuzzle({ onEarn }: { onEarn: (amount: number) => void }) {
   const [level, setLevel] = useState<1 | 2 | 3>(1);
   const [index, setIndex] = useState(0);
   const [bank, setBank] = useState<Piece[]>([]);
@@ -162,7 +162,6 @@ export default function NomenclaturePuzzle({ onEarn, onAsk }: { onEarn: (amount:
         <button disabled={!answer.length || feedback === "correct"} onClick={undo}>↶ Deshacer</button>
         <button onClick={() => prepare(current)}>Limpiar</button>
         <button className="hint" onClick={() => setShowHint(true)}>✦ Pista</button>
-        <button onClick={() => onAsk(`Estoy haciendo el puzle de ${current.name}. Explícame cómo decidir el número de carbonos, la posición y los hidrógenos antes de ordenar las piezas.`)}>Preguntar</button>
         {feedback === "correct" ? <button className="primary" onClick={() => go(index + 1)}>Siguiente →</button> : <button className="primary" disabled={!answer.length} onClick={check}>Comprobar</button>}
       </div>
     </article>

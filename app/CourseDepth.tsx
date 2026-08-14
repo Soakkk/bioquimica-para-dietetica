@@ -156,7 +156,7 @@ function MultipleBondBridge() {
   </section>;
 }
 
-export default function CourseDepth({ moduleId, onPractice, onBranches, onAsk }: { moduleId: 2 | 3; onPractice: () => void; onBranches: () => void; onAsk: (text: string) => void }) {
+export default function CourseDepth({ moduleId, onPractice, onBranches }: { moduleId: 2 | 3; onPractice: () => void; onBranches: () => void }) {
   const sections = moduleId === 2 ? namingSections : hydrocarbonSections;
   const [active, setActive] = useState(sections[0].id);
   const current = sections.find((section) => section.id === active) ?? sections[0];
@@ -170,6 +170,6 @@ export default function CourseDepth({ moduleId, onPractice, onBranches, onAsk }:
 
     {moduleId === 2 ? <div className="book-translation"><div><span>TRADUCTOR DEL LIBRO</span><h4>Nomenclatura antigua, moderna y erratas</h4><p>Aprenderás la forma moderna, pero reconocerás la que aparece en las capturas.</p></div><div className="translation-table"><div><b>En el libro</b><b>Forma que usaremos</b><b>Qué ocurre</b></div><div><code>2 hexeno</code><code>hex-2-eno</code><span>Mismo compuesto; cambia la colocación moderna del localizador.</span></div><div><code>2,4,6 nonatriino</code><code>nona-2,4,6-triino</code><span>Tres triples enlaces en una cadena de 9 carbonos.</span></div><div><code>2-dimetilbutano</code><code>nombre incompleto</code><span>“di-” exige dos localizadores: por ejemplo, 2,2-dimetilbutano.</span></div><div><code>metil, propano</code><code>2-metilpropano</code><span>Falta el localizador y la puntuación correcta.</span></div></div></div> : <div className="book-corrections"><span>LECTURA CRÍTICA DEL LIBRO</span><div><article><b>Heterociclos</b><p>Se agrupan cerca de los ciclos, pero no son hidrocarburos porque contienen N, O o S.</p></article><article><b>“Aromático”</b><p>Describe estabilidad y deslocalización electrónica; no significa necesariamente que huela.</p></article><article><b>Grasas poliinsaturadas</b><p>Las más comunes no suelen ser conjugadas; los dobles enlaces conjugados son un caso específico.</p></article><article><b>Fórmulas generales</b><p>CₙH₂ₙ o CₙH₂ₙ₋₂ solo identifican una familia cuando conocemos también la estructura y el número de ciclos o insaturaciones.</p></article></div></div>}
 
-    <div className="depth-actions"><button onClick={() => onAsk(moduleId === 2 ? "Explícame la ruta completa para pasar de un nombre orgánico a la fórmula, incluyendo cadena principal, localizadores, sustituyentes e insaturaciones." : "Explícame el mapa completo de hidrocarburos y qué partes debo dominar especialmente para Dietética.")}>Preguntar sobre este bloque</button>{moduleId === 2 && <button onClick={onBranches}>Practicar cadena y ramas</button>}<button className="primary" onClick={onPractice}>Hacer los ejercicios de esta lección →</button></div>
+    <div className="depth-actions">{moduleId === 2 && <button onClick={onBranches}>Practicar cadena y ramas</button>}<button className="primary" onClick={onPractice}>Hacer los ejercicios de esta lección →</button></div>
   </section>;
 }
