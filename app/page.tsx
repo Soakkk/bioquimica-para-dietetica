@@ -3,6 +3,7 @@
 import { DragEvent, PointerEvent, useEffect, useMemo, useRef, useState } from "react";
 import NomenclatureTrainer from "./NomenclatureTrainer";
 import IntegratedReview from "./IntegratedReview";
+import ReviewQueue from "./ReviewQueue";
 import CourseDepth from "./CourseDepth";
 import InlineLessonPractice from "./InlineLessonPractice";
 import ChainBranchLesson from "./ChainBranchLesson";
@@ -273,7 +274,7 @@ export default function Home() {
   const [level, setLevel] = useState(1);
   const [questionAt, setQuestionAt] = useState(0);
   const [practiceModuleFilter, setPracticeModuleFilter] = useState<number | null>(null);
-  const [practiceView, setPracticeView] = useState<"routes" | "free">("routes");
+  const [practiceView, setPracticeView] = useState<"srs" | "routes" | "free">("srs");
   const [picked, setPicked] = useState<number | null>(null);
   const [feedback, setFeedback] = useState<"correct" | "wrong" | null>(null);
   const [showHint, setShowHint] = useState(false);
@@ -716,9 +717,9 @@ export default function Home() {
       </>}
 
       {mode === "practice" && <section className="practice-page">
-        <div className="page-intro"><span className="kicker"><i/> {practiceModuleFilter !== null ? "PRÁCTICA RELACIONADA CON LA TEORÍA" : practiceView === "routes" ? "REPASO TEÓRICO Y PRÁCTICO" : "ENTRENAMIENTO ADAPTATIVO"}</span><h1>{practiceModuleFilter !== null ? <>Afianza la<br/><em>lección {practiceModuleFilter + 1}.</em></> : practiceView === "routes" ? <>Relaciona.<br/><em>Aplica. Recuerda.</em></> : "Piensa como un químico."}</h1><p>{practiceModuleFilter !== null ? `Estos ejercicios trabajan únicamente “${modules[practiceModuleFilter].title}”, siguiendo el mismo orden de ideas y ejemplos.` : practiceView === "routes" ? "Repasa grupos de temas que dependen unos de otros y descubre exactamente qué conexión necesitas reforzar." : "No basta con acertar: después de cada respuesta verás la regla que permite deducirla."}</p></div>
-        {practiceModuleFilter === null && <div className="practice-view-tabs"><button className={practiceView === "routes" ? "active" : ""} onClick={() => setPracticeView("routes")}><span>01</span><div><b>Repaso por bloques</b><small>Teoría conectada + diagnóstico</small></div></button><button className={practiceView === "free" ? "active" : ""} onClick={() => setPracticeView("free")}><span>02</span><div><b>Ejercicios por nivel</b><small>Práctica rápida y libre</small></div></button></div>}
-        {practiceModuleFilter === null && practiceView === "routes" ? <IntegratedReview key={`review-${resetEpoch}`} onEarn={earn}/> : <>
+        <div className="page-intro"><span className="kicker"><i/> {practiceModuleFilter !== null ? "PRÁCTICA RELACIONADA CON LA TEORÍA" : practiceView === "srs" ? "REPETICIÓN ESPACIADA" : practiceView === "routes" ? "REPASO TEÓRICO Y PRÁCTICO" : "ENTRENAMIENTO ADAPTATIVO"}</span><h1>{practiceModuleFilter !== null ? <>Afianza la<br/><em>lección {practiceModuleFilter + 1}.</em></> : practiceView === "srs" ? <>Lo que toca<br/><em>repasar hoy.</em></> : practiceView === "routes" ? <>Relaciona.<br/><em>Aplica. Recuerda.</em></> : "Piensa como un químico."}</h1><p>{practiceModuleFilter !== null ? `Estos ejercicios trabajan únicamente “${modules[practiceModuleFilter].title}”, siguiendo el mismo orden de ideas y ejemplos.` : practiceView === "srs" ? "Sin calendario: la app te devuelve cada pregunta cuando conviene volver a verla. Lo que fallas vuelve pronto; lo que dominas tarda en aparecer." : practiceView === "routes" ? "Repasa grupos de temas que dependen unos de otros y descubre exactamente qué conexión necesitas reforzar." : "No basta con acertar: después de cada respuesta verás la regla que permite deducirla."}</p></div>
+        {practiceModuleFilter === null && <div className="practice-view-tabs"><button className={practiceView === "srs" ? "active" : ""} onClick={() => setPracticeView("srs")}><span>01</span><div><b>Repaso de hoy</b><small>Repetición espaciada</small></div></button><button className={practiceView === "routes" ? "active" : ""} onClick={() => setPracticeView("routes")}><span>02</span><div><b>Repaso por bloques</b><small>Teoría conectada + diagnóstico</small></div></button><button className={practiceView === "free" ? "active" : ""} onClick={() => setPracticeView("free")}><span>03</span><div><b>Ejercicios por nivel</b><small>Práctica rápida y libre</small></div></button></div>}
+        {practiceModuleFilter === null && practiceView === "srs" ? <ReviewQueue key={`srs-${resetEpoch}`} onEarn={earn}/> : practiceModuleFilter === null && practiceView === "routes" ? <IntegratedReview key={`review-${resetEpoch}`} onEarn={earn}/> : <>
         {practiceModuleFilter !== null && <div className="lesson-practice-route"><span>1 · TEORÍA LEÍDA</span><i>→</i><span>2 · EJEMPLOS RESUELTOS</span><i>→</i><b>3 · PRÁCTICA DE LA LECCIÓN</b><button onClick={() => { setModuleId(practiceModuleFilter); setMode("learn"); setTimeout(() => document.getElementById("guide")?.scrollIntoView({ behavior: "smooth" }), 50); }}>← Volver a la teoría</button></div>}
         <div className="level-tabs">{levelNames.map((name, i) => <button key={name} className={practiceModuleFilter === null && level === i + 1 ? "active" : ""} onClick={() => { setPracticeModuleFilter(null); setLevel(i + 1); setQuestionAt(0); setPicked(null); setFeedback(null); setShowHint(false); }}><span>{i + 1}</span><b>{name}</b><small>{questions.filter((q) => q.level === i + 1).length} retos</small></button>)}</div>
         <div className="practice-shell">

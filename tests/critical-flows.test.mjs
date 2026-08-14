@@ -411,3 +411,90 @@ test("las dos vistas de lectura salen de la misma fuente de secciones", () => {
     "La lectura continua debe leer las mismas secciones",
   );
 });
+
+const srs = executeDataModule(readSource("app/spaced-repetition.ts").source);
+const bank = executeDataModule(readSource("app/bio-question-bank.ts").source);
+
+test("fallar una pregunta la devuelve al día siguiente y baja la facilidad", () => {
+  const card = srs.newCard("2026-08-15");
+  const after = srs.review(card, "fallo", "2026-08-15");
+
+  assert.equal(after.due, "2026-08-16", "Lo fallado vuelve mañana");
+  assert.equal(after.streak, 0, "La racha se reinicia");
+  assert.equal(after.lapses, 1);
+  assert.ok(after.ease < card.ease, "Fallar debe reducir el factor de facilidad");
+});
+
+test("acertar repetidamente espacia los repasos cada vez más", () => {
+  let card = srs.newCard("2026-08-15");
+  const intervals = [];
+  let day = "2026-08-15";
+
+  for (let i = 0; i < 4; i += 1) {
+    card = srs.review(card, "bien", day);
+    intervals.push(card.interval);
+    day = card.due;
+  }
+
+  for (let i = 1; i < intervals.length; i += 1) {
+    assert.ok(
+      intervals[i] > intervals[i - 1],
+      `El intervalo debe crecer: ${intervals[i - 1]} -> ${intervals[i]}`,
+    );
+  }
+});
+
+test("la facilidad nunca cae por debajo del mínimo por muchos fallos que haya", () => {
+  let card = srs.newCard("2026-08-15");
+  for (let i = 0; i < 30; i += 1) card = srs.review(card, "fallo", "2026-08-15");
+  assert.ok(card.ease >= 1.3, "El factor de facilidad tiene suelo");
+  assert.equal(card.interval, 1, "Un fallo siempre devuelve la tarjeta a un día");
+});
+
+test("la cola prioriza lo más fallado y excluye lo que aún no toca", () => {
+  const schedule = {
+    facil: { interval: 10, ease: 2.5, streak: 3, due: "2026-09-01", seen: 3, lapses: 0 },
+    dificil: { interval: 1, ease: 1.4, streak: 0, due: "2026-08-15", seen: 6, lapses: 4 },
+    media: { interval: 2, ease: 2.2, streak: 1, due: "2026-08-15", seen: 2, lapses: 1 },
+  };
+  const queue = srs.dueQueue(["facil", "dificil", "media", "nueva"], schedule, "2026-08-15");
+
+  assert.equal(queue.includes("facil"), false, "Lo programado para más adelante no aparece hoy");
+  assert.equal(queue[0], "dificil", "Lo más fallado va primero");
+  assert.ok(queue.includes("nueva"), "Una pregunta nunca vista entra en la cola");
+});
+
+test("el banco ampliado explica por qué falla cada distractor", () => {
+  const conOpciones = bank.questionBank.filter((question) => Array.isArray(question.options));
+  assert.ok(conOpciones.length > 60, "El banco debe aportar un volumen real de preguntas");
+
+  for (const question of conOpciones) {
+    const correctas = Array.isArray(question.correctAnswer) ? question.correctAnswer : [question.correctAnswer];
+
+    for (const correcta of correctas) {
+      assert.ok(
+        question.options.includes(correcta),
+        `${question.id}: la respuesta correcta debe estar entre las opciones`,
+      );
+    }
+
+    const distractores = question.options.filter((option) => !correctas.includes(option));
+    for (const distractor of distractores) {
+      assert.ok(
+        question.optionNotes?.[distractor],
+        `${question.id}: falta explicar por qué "${distractor}" no es correcta`,
+      );
+    }
+  }
+});
+
+test("cada pregunta del banco apunta a un tema que existe y tiene id único", () => {
+  const themeIds = new Set(bioThemes.map((theme) => theme.id));
+  const seen = new Set();
+
+  for (const question of bank.questionBank) {
+    assert.ok(themeIds.has(question.themeId), `${question.id} apunta a un tema inexistente`);
+    assert.equal(seen.has(question.id), false, `id duplicado: ${question.id}`);
+    seen.add(question.id);
+  }
+});

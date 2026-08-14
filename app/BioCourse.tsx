@@ -11,6 +11,7 @@ import {
   type IntegrationRoute,
 } from "./bio-course-data";
 import LessonReader, { ModeToggle, readStoredMode, type ReadingMode } from "./LessonReader";
+import ProgressBackup from "./ProgressBackup";
 
 type BioCourseProps = {
   completedThemes: number[];
@@ -284,6 +285,8 @@ function CourseDashboard({
           ))}
         </div>
       </section>
+
+      <ProgressBackup />
 
       <section className="bio-sources" aria-labelledby="bio-sources-title">
         <details>
