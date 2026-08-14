@@ -346,3 +346,68 @@ test("comprobar una respuesta correcta del quiz no cambia de pregunta automátic
   );
   assert.equal(manualNextButtons.length, 1, "Tras acertar debe aparecer un único avance manual");
 });
+
+const bioSections = readSource("app/bio-course-sections.ts");
+const { blockSections } = executeDataModule(bioSections.source);
+
+test("cada bloque del temario tiene teoría expandida y ninguna clave sobra", () => {
+  const blockIds = bioThemes.flatMap((theme) => theme.blocks.map((block) => block.id));
+  const written = Object.keys(blockSections);
+
+  const missing = blockIds.filter((id) => !blockSections[id]?.length);
+  assert.deepEqual(missing, [], "Todos los bloques deben tener secciones escritas");
+
+  const orphan = written.filter((id) => !blockIds.includes(id));
+  assert.deepEqual(orphan, [], "No debe haber secciones huérfanas apuntando a bloques inexistentes");
+});
+
+test("la teoría expandida explica, no resume: cada bloque supera sus frases originales", () => {
+  for (const theme of bioThemes) {
+    for (const block of theme.blocks) {
+      const sections = blockSections[block.id];
+      const paragraphs = sections.flatMap((section) => section.paragraphs);
+
+      assert.ok(
+        paragraphs.length > block.theory.length,
+        `${block.id} debe tener más párrafos que las frases telegráficas originales`,
+      );
+      for (const section of sections) {
+        assert.ok(section.heading?.trim().length > 0, `${block.id} tiene una sección sin encabezado`);
+        assert.ok(section.paragraphs.length > 0, `${block.id} tiene una sección vacía`);
+      }
+    }
+  }
+});
+
+test("el temario ya no impone calendario", () => {
+  assert.equal(
+    /studySchedule|ScheduleDay/.test(bioData.source),
+    false,
+    "El plan por semanas debe estar eliminado del modelo de datos",
+  );
+  assert.equal(
+    /WeekCard|studySchedule/.test(bioCourse.source),
+    false,
+    "El panel no debe volver a renderizar tarjetas de semana",
+  );
+});
+
+test("las dos vistas de lectura salen de la misma fuente de secciones", () => {
+  const reader = readSource("app/LessonReader.tsx");
+
+  for (const component of ["ContinuousReader", "StepReader"]) {
+    assert.ok(findFunction(reader.ast, component), `Debe existir ${component}`);
+  }
+
+  const buildSteps = findFunction(reader.ast, "buildSteps");
+  assert.ok(
+    visit(buildSteps, (node) => callNamed(node, "sectionsFor")).length > 0,
+    "El modo paso a paso debe construirse desde las mismas secciones, no desde un contenido paralelo",
+  );
+
+  const continuous = findFunction(reader.ast, "ContinuousReader");
+  assert.ok(
+    visit(continuous, (node) => callNamed(node, "sectionsFor")).length > 0,
+    "La lectura continua debe leer las mismas secciones",
+  );
+});

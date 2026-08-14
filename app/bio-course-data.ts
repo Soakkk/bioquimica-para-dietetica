@@ -45,18 +45,6 @@ export type CourseTheme = {
   connections: string[];
 };
 
-export type ScheduleDay = {
-  day: number;
-  week: 1 | 2 | 3 | 4;
-  optional: boolean;
-  title: string;
-  themeIds: string[];
-  focus: string;
-  tasks: string[];
-  targetMinutes: number;
-  checkpoint: string;
-};
-
 export type IntegrationRoute = {
   id: string;
   title: string;
@@ -1610,37 +1598,6 @@ export const bioThemes: CourseTheme[] = [
     mastery: ["Diferenciar transaminación/desaminación", "Explicar urea", "Seguir esqueletos carbonados", "Interpretar balance nitrogenado"],
     connections: ["tema-4-proteinas", "tema-5-acidos-nucleicos", "tema-8-metabolismo", "tema-10-metabolismo-hc"],
   },
-];
-
-export const studySchedule: ScheduleDay[] = [
-  { day: 1, week: 1, optional: false, title: "Diagnóstico y lenguaje molecular", themeIds: ["tema-1-carbono"], focus: "Valencia, electrones y enlaces", tasks: ["Diagnóstico inicial", "Leer bloques 1–2", "Construir CH₄, H₂O y NH₃"], targetMinutes: 90, checkpoint: "Diferencio electrones de valencia y enlaces." },
-  { day: 2, week: 1, optional: false, title: "Fórmulas y carbono", themeIds: ["tema-1-carbono"], focus: "Representaciones y grados de carbono", tasks: ["Convertir fórmulas", "Clasificar carbonos", "Repaso espaciado del día 1"], targetMinutes: 90, checkpoint: "Paso de fórmula desarrollada a molecular y empírica." },
-  { day: 3, week: 1, optional: false, title: "Nombrar sin saltos", themeIds: ["tema-1-carbono"], focus: "Cadena, localizadores y sustituyentes", tasks: ["Trazar cadenas", "Puzle metil/etil", "Nombrar cinco alcanos ramificados"], targetMinutes: 110, checkpoint: "Sé explicar por qué una rama queda fuera de la cadena." },
-  { day: 4, week: 1, optional: false, title: "Saturación e insaturaciones", themeIds: ["tema-1-carbono", "tema-3-lipidos"], focus: "Alcano, alqueno, alquino y puente a grasas", tasks: ["Completar H", "Localizar C=C/C≡C", "Leer 18:1"], targetMinutes: 100, checkpoint: "No confundo C=C de cadena con C=O del carboxilo." },
-  { day: 5, week: 1, optional: false, title: "Grupos funcionales", themeIds: ["tema-1-carbono"], focus: "OH, carbonilo, carboxilo, éster, amina y amida", tasks: ["Escáner molecular", "Comparar aldehído/cetona", "Construir un éster"], targetMinutes: 105, checkpoint: "Reconozco seis grupos sin mirar la tabla." },
-  { day: 6, week: 1, optional: false, title: "Isomería y control 1", themeIds: ["tema-1-carbono"], focus: "Cadena, posición, función y cis/trans", tasks: ["Comparar isómeros", "Caso cis/trans", "Prueba acumulativa"], targetMinutes: 90, checkpoint: "Obtengo al menos 80 % en Tema 1." },
-  { day: 7, week: 1, optional: false, title: "Monosacáridos", themeIds: ["tema-2-hidratos"], focus: "Aldosas, cetosas, pentosas y hexosas", tasks: ["Clasificar cadenas", "Comparar glucosa/fructosa", "Mini-repaso Tema 1"], targetMinutes: 100, checkpoint: "Clasifico un monosacárido con dos decisiones." },
-  { day: 8, week: 2, optional: false, title: "Anillos y enlaces glucosídicos", themeIds: ["tema-2-hidratos"], focus: "Anomería, disacáridos y polisacáridos", tasks: ["Marcar carbono anomérico", "Construir disacáridos", "Comparar almidón/glucógeno/celulosa"], targetMinutes: 120, checkpoint: "Explico digestibilidad por el tipo de enlace." },
-  { day: 9, week: 2, optional: false, title: "Fibra y aplicación glucídica", themeIds: ["tema-2-hidratos", "tema-9-digestion"], focus: "Solubilidad, viscosidad y fermentación", tasks: ["Caso de fibra", "Ruta almidón→glucosa", "Control Tema 2"], targetMinutes: 95, checkpoint: "No reduzco toda la fibra al mismo efecto." },
-  { day: 10, week: 2, optional: false, title: "Ácidos grasos", themeIds: ["tema-3-lipidos"], focus: "Saturados, cis/trans y omega", tasks: ["Leer notaciones", "Doblar cadena cis", "Caso de sustitución dietética"], targetMinutes: 105, checkpoint: "Interpreto 18:2 n-6 sin ayuda." },
-  { day: 11, week: 2, optional: false, title: "Lípidos complejos", themeIds: ["tema-3-lipidos"], focus: "Triglicéridos, membranas y lipoproteínas", tasks: ["Construir triglicérido", "Simular bicapa", "Ruta de quilomicrón"], targetMinutes: 120, checkpoint: "Diferencio grasa, colesterol y lipoproteína." },
-  { day: 12, week: 2, optional: false, title: "Proteínas y enzimas", themeIds: ["tema-4-proteinas"], focus: "Aminoácidos, péptidos, plegamiento y catálisis", tasks: ["Formar péptido", "Ordenar niveles", "Laboratorio de enzimas"], targetMinutes: 125, checkpoint: "Diferencio desnaturalización e hidrólisis." },
-  { day: 13, week: 2, optional: false, title: "ADN, ARN y síntesis", themeIds: ["tema-5-acidos-nucleicos"], focus: "Nucleótidos y flujo de información", tasks: ["Completar bases", "Ordenar ADN→ARN→proteína", "Conectar NAD/FAD"], targetMinutes: 100, checkpoint: "Distingo replicación, transcripción y traducción." },
-  { day: 14, week: 2, optional: false, title: "Medio interno y cofactores", themeIds: ["tema-6-agua-minerales", "tema-7-vitaminas"], focus: "Agua, electrolitos, minerales y mapa vitamínico", tasks: ["Simular osmosis", "Mapa Na/K", "Emparejar vitaminas y coenzimas"], targetMinutes: 130, checkpoint: "Relaciono cuatro micronutrientes con mecanismo y no solo con alimento." },
-  { day: 15, week: 3, optional: false, title: "Digestión integrada", themeIds: ["tema-9-digestion"], focus: "Carbohidratos, proteínas y grasas", tasks: ["Ordenar enzimas", "Simular micela", "Elegir porta o linfa"], targetMinutes: 120, checkpoint: "Trazo los tres macronutrientes hasta sangre o linfa." },
-  { day: 16, week: 3, optional: false, title: "Lenguaje metabólico", themeIds: ["tema-8-metabolismo"], focus: "ATP, redox, acetil-CoA y hormonas", tasks: ["Fichas ATP", "Cálculos 2,5/1,5", "Panel alimentado/ayuno"], targetMinutes: 110, checkpoint: "Explico por qué NADH y FADH₂ no rinden lo mismo." },
-  { day: 17, week: 3, optional: false, title: "Glucosa y glucógeno", themeIds: ["tema-10-metabolismo-hc"], focus: "Glucólisis, lactato y gluconeogénesis", tasks: ["Balancear glucólisis", "Destinos de piruvato", "Caso ayuno"], targetMinutes: 125, checkpoint: "Obtengo 2 ATP netos y explico regeneración de NAD⁺." },
-  { day: 18, week: 3, optional: false, title: "Krebs y fosforilación", themeIds: ["tema-10-metabolismo-hc"], focus: "Electrones, protones y 30–32 ATP", tasks: ["Dos vueltas de Krebs", "Construir cadena respiratoria", "Cálculo moderno"], targetMinutes: 130, checkpoint: "Puedo narrar glucosa→CO₂, H₂O y ATP." },
-  { day: 19, week: 3, optional: false, title: "Metabolismo de grasas", themeIds: ["tema-11-metabolismo-lipidico"], focus: "β-oxidación, cetonas y lipogénesis", tasks: ["Calcular palmitato", "Mapa de cetonas", "Comparar ayuno/posprandio"], targetMinutes: 130, checkpoint: "Sé por qué el hígado fabrica cetonas pero no las usa." },
-  { day: 20, week: 3, optional: false, title: "Metabolismo de proteínas", themeIds: ["tema-12-metabolismo-proteico"], focus: "Transaminación, urea y destino del carbono", tasks: ["Mover grupos amino", "Trazar urea", "Caso de balance nitrogenado"], targetMinutes: 120, checkpoint: "Sigo por separado el N y el esqueleto carbonado." },
-  { day: 21, week: 3, optional: false, title: "Examen integrado", themeIds: ["tema-2-hidratos", "tema-3-lipidos", "tema-4-proteinas", "tema-8-metabolismo", "tema-9-digestion", "tema-10-metabolismo-hc", "tema-11-metabolismo-lipidico", "tema-12-metabolismo-proteico"], focus: "Del alimento a la célula", tasks: ["Caso de comida mixta", "Simulacro final", "Plan automático de fallos"], targetMinutes: 150, checkpoint: "Alcanzo 80 % y explico tres conexiones sin opciones." },
-  { day: 22, week: 4, optional: true, title: "Nomenclatura avanzada", themeIds: ["tema-1-carbono"], focus: "Multifunción, aromáticos y heterociclos", tasks: ["Puzles avanzados", "Traductor del libro", "Auditoría de valencias"], targetMinutes: 100, checkpoint: "Puedo reconocer nombres complejos aunque no sean prioridad dietética." },
-  { day: 23, week: 4, optional: true, title: "Estereoquímica de glúcidos", themeIds: ["tema-2-hidratos"], focus: "D/L, α/β y Haworth", tasks: ["Fischer→Haworth", "Carbono anomérico", "Poder reductor"], targetMinutes: 110, checkpoint: "No confundo D/L con α/β." },
-  { day: 24, week: 4, optional: true, title: "Lípidos de membrana y señales", themeIds: ["tema-3-lipidos", "tema-11-metabolismo-lipidico"], focus: "Esfingolípidos, eicosanoides y remodelado", tasks: ["Mapa de lípidos complejos", "Caso de membrana", "Repaso omega"], targetMinutes: 105, checkpoint: "Sitúo cada familia sin memorizar listas aisladas." },
-  { day: 25, week: 4, optional: true, title: "Enzimas y cofactores", themeIds: ["tema-4-proteinas", "tema-7-vitaminas"], focus: "Regulación e inhibición", tasks: ["Curvas cualitativas", "Casos de vitaminas B", "Siete clases EC"], targetMinutes: 105, checkpoint: "Predigo cómo cambia una velocidad enzimática." },
-  { day: 26, week: 4, optional: true, title: "Micronutrientes aplicados", themeIds: ["tema-6-agua-minerales", "tema-7-vitaminas"], focus: "Deficiencia, exceso e interacción", tasks: ["Casos clínico-dietéticos", "Fuentes actuales", "Biodisponibilidad"], targetMinutes: 110, checkpoint: "Justifico una hipótesis sin diagnosticar por un solo síntoma." },
-  { day: 27, week: 4, optional: true, title: "Cálculo y trazado metabólico", themeIds: ["tema-10-metabolismo-hc", "tema-11-metabolismo-lipidico", "tema-12-metabolismo-proteico"], focus: "Carbono, electrones y nitrógeno", tasks: ["Trazar C", "Calcular ATP", "Trazar N"], targetMinutes: 130, checkpoint: "Puedo auditar mis propios cálculos." },
-  { day: 28, week: 4, optional: true, title: "Simulacro de dominio", themeIds: bioThemes.map((theme) => theme.id), focus: "Transferencia completa", tasks: ["Examen sin pistas", "Revisión razonada", "Cierre de lagunas"], targetMinutes: 150, checkpoint: "Domino los P1 y sé localizar rápidamente los P2/P3." },
 ];
 
 export const integrationRoutes: IntegrationRoute[] = [

@@ -5,14 +5,12 @@ import {
   bioThemes,
   courseSources,
   integrationRoutes,
-  studySchedule,
-  type CourseBlock,
   type CoursePriority,
   type CourseQuestion,
   type CourseTheme,
   type IntegrationRoute,
-  type ScheduleDay,
 } from "./bio-course-data";
+import LessonReader, { ModeToggle, readStoredMode, type ReadingMode } from "./LessonReader";
 
 type BioCourseProps = {
   completedThemes: number[];
@@ -33,27 +31,8 @@ const priorityCopy: Record<CoursePriority, { label: string; detail: string }> = 
   ampliacion: { label: "Ampliación", detail: "Útil para profundizar" },
 };
 
-const weekCopy: Record<number, { title: string; subtitle: string }> = {
-  1: { title: "Semana 1 · Lenguaje químico", subtitle: "Carbono, fórmulas y primera lectura molecular" },
-  2: { title: "Semana 2 · Biomoléculas", subtitle: "Glúcidos, lípidos, proteínas y regulación" },
-  3: { title: "Semana 3 · Integración", subtitle: "Digestión, metabolismo y casos de Dietética" },
-  4: { title: "Semana 4 · Consolidación", subtitle: "Profundización opcional y simulacro final" },
-};
-
 function themeFromId(id: string): CourseTheme | undefined {
   return bioThemes.find((theme) => theme.id === id);
-}
-
-function themeNumbersForDays(days: ScheduleDay[]): number[] {
-  return Array.from(
-    new Set(
-      days.flatMap((day) =>
-        day.themeIds
-          .map((id) => themeFromId(id)?.number)
-          .filter((number): number is number => typeof number === "number"),
-      ),
-    ),
-  );
 }
 
 function formatMinutes(minutes: number): string {
@@ -122,79 +101,6 @@ function PriorityBadge({ priority }: { priority: CoursePriority }) {
   );
 }
 
-function WeekCard({
-  week,
-  days,
-  completedThemes,
-  onOpenTheme,
-}: {
-  week: number;
-  days: ScheduleDay[];
-  completedThemes: number[];
-  onOpenTheme: (number: number) => void;
-}) {
-  const themeNumbers = themeNumbersForDays(days);
-  const completed = themeNumbers.filter((number) => completedThemes.includes(number)).length;
-  const progress = themeNumbers.length ? Math.round((completed / themeNumbers.length) * 100) : 0;
-  const optional = days.every((day) => day.optional);
-  const totalMinutes = days.reduce((total, day) => total + day.targetMinutes, 0);
-
-  return (
-    <article className={`bio-week-card${optional ? " bio-week-card--optional" : ""}`}>
-      <div className="bio-week-card__topline">
-        <span className="bio-week-card__number">{String(week).padStart(2, "0")}</span>
-        <span className="bio-week-card__time">{formatMinutes(totalMinutes)}</span>
-      </div>
-      <div className="bio-week-card__heading">
-        <div>
-          <p className="bio-kicker">{optional ? "Ruta opcional" : `Días ${days[0]?.day}–${days.at(-1)?.day}`}</p>
-          <h3>{weekCopy[week]?.title}</h3>
-          <p>{weekCopy[week]?.subtitle}</p>
-        </div>
-        <span className="bio-week-card__fraction">{completed}/{themeNumbers.length}</span>
-      </div>
-      <div className="bio-progress" aria-label={`${progress}% de la semana completado`}>
-        <span className="bio-progress__bar" style={{ width: `${progress}%` }} />
-      </div>
-
-      <div className="bio-week-card__themes" aria-label={`Temas de la semana ${week}`}>
-        {themeNumbers.map((number) => {
-          const theme = bioThemes.find((item) => item.number === number);
-          if (!theme) return null;
-          const done = completedThemes.includes(number);
-          return (
-            <button
-              className={`bio-theme-pill${done ? " bio-theme-pill--done" : ""}`}
-              key={theme.id}
-              onClick={() => onOpenTheme(number)}
-              type="button"
-            >
-              <span aria-hidden="true">{done ? "✓" : String(number).padStart(2, "0")}</span>
-              {theme.title}
-            </button>
-          );
-        })}
-      </div>
-
-      <details className="bio-week-card__days">
-        <summary>Ver plan día a día</summary>
-        <ol>
-          {days.map((day) => (
-            <li key={day.day}>
-              <span className="bio-week-card__day">Día {day.day}</span>
-              <div>
-                <strong>{day.title}</strong>
-                <p>{day.focus}</p>
-              </div>
-              <span>{day.targetMinutes} min</span>
-            </li>
-          ))}
-        </ol>
-      </details>
-    </article>
-  );
-}
-
 function IntegrationCard({
   route,
   onOpenTheme,
@@ -255,11 +161,11 @@ function CourseDashboard({
     <main className="bio-course bio-course--dashboard">
       <section className="bio-dashboard-hero">
         <div className="bio-dashboard-hero__copy">
-          <p className="bio-kicker">BIOQUÍMICA PARA DIETÉTICA · PLAN INTENSIVO</p>
-          <h1>Mi ruta de 3 semanas</h1>
+          <p className="bio-kicker">BIOQUÍMICA PARA DIETÉTICA</p>
+          <h1>Mi temario</h1>
           <p className="bio-dashboard-hero__lead">
-            Un único recorrido para leer la teoría, verla funcionar y practicarla sin saltar entre secciones.
-            La cuarta semana queda disponible si quieres consolidar o ampliar.
+            Los doce temas con la teoría explicada, ejemplos resueltos y preguntas para comprobar que
+            se ha quedado. Sin calendario: avanzas cuando puedes y la app recuerda por dónde ibas.
           </p>
           <div className="bio-dashboard-hero__actions">
             <button
@@ -294,22 +200,38 @@ function CourseDashboard({
       <section className="bio-dashboard-section" aria-labelledby="bio-weeks-title">
         <div className="bio-section-heading">
           <div>
-            <p className="bio-kicker">TU CALENDARIO</p>
-            <h2 id="bio-weeks-title">Avanza por semanas, no por tarjetas sueltas</h2>
+            <p className="bio-kicker">EL TEMARIO</p>
+            <h2 id="bio-weeks-title">Doce temas, y tú decides el ritmo</h2>
           </div>
-          <p>Cada tema reúne explicación, ejemplos, recuerdo activo, prueba y caso aplicado.</p>
+          <p>Están en orden de dependencia: cada uno se apoya en los anteriores. Puedes ir seguido o saltar al que necesites.</p>
         </div>
-        <div className="bio-week-grid">
-          {[1, 2, 3, 4].map((week) => (
-            <WeekCard
-              completedThemes={completedThemes}
-              days={studySchedule.filter((day) => day.week === week)}
-              key={week}
-              onOpenTheme={onOpenTheme}
-              week={week}
-            />
-          ))}
-        </div>
+        <ol className="bio-theme-list">
+          {bioThemes.map((theme) => {
+            const done = completedThemes.includes(theme.number);
+            const score = scores[theme.number];
+            return (
+              <li key={theme.id}>
+                <button
+                  className={`bio-theme-row${done ? " bio-theme-row--done" : ""}`}
+                  onClick={() => onOpenTheme(theme.number)}
+                  type="button"
+                >
+                  <span className="bio-theme-row__n" aria-hidden="true">
+                    {done ? "✓" : String(theme.number).padStart(2, "0")}
+                  </span>
+                  <span className="bio-theme-row__text">
+                    <strong>{theme.title}</strong>
+                    <small>{theme.eyebrow}</small>
+                  </span>
+                  <span className="bio-theme-row__meta">
+                    {typeof score === "number" ? <b>{score}%</b> : null}
+                    <em>{theme.blocks.length} bloques</em>
+                  </span>
+                </button>
+              </li>
+            );
+          })}
+        </ol>
       </section>
 
       <section className="bio-dashboard-section bio-dashboard-section--split" aria-labelledby="bio-reinforce-title">
@@ -389,30 +311,6 @@ function CourseDashboard({
         </details>
       </section>
     </main>
-  );
-}
-
-function ExampleFlow({ block }: { block: CourseBlock }) {
-  return (
-    <div className="bio-example">
-      <div className="bio-example__heading">
-        <span>Ejemplo resuelto</span>
-        <h4>{block.example.title}</h4>
-        <p>{block.example.prompt}</p>
-      </div>
-      <ol className="bio-example__flow">
-        {block.example.steps.map((step, index) => (
-          <li key={`${block.id}-step-${index}`}>
-            <span>{index + 1}</span>
-            <p>{step}</p>
-          </li>
-        ))}
-      </ol>
-      <div className="bio-example__answer">
-        <span aria-hidden="true">✓</span>
-        <p><strong>Resultado razonado:</strong> {block.example.answer}</p>
-      </div>
-    </div>
   );
 }
 
@@ -779,6 +677,8 @@ function DieteticsCase({
 function ThemeLesson({
   theme,
   completedThemes,
+  readingMode,
+  onReadingModeChange,
   onBack,
   onOpenTheme,
   onComplete,
@@ -787,6 +687,8 @@ function ThemeLesson({
 }: {
   theme: CourseTheme;
   completedThemes: number[];
+  readingMode: ReadingMode;
+  onReadingModeChange: (mode: ReadingMode) => void;
   onBack: () => void;
   onOpenTheme: (number: number) => void;
   onComplete: (themeId: number, score: number) => void;
@@ -867,53 +769,13 @@ function ThemeLesson({
 
       <article className="bio-reading">
         <div className="bio-reading__intro">
-          <p className="bio-kicker">LECCIÓN UNIFICADA</p>
+          <p className="bio-kicker">TEORÍA</p>
           <h2>Lee de arriba abajo: cada bloque prepara el siguiente</h2>
-          <p>Teoría suficiente para estudiar, un ejemplo trazado y una tarea concreta para comprobarla.</p>
+          <p>Teoría explicada, un ejemplo trazado y una tarea concreta para comprobarla.</p>
         </div>
 
-        {theme.blocks.map((block, index) => (
-          <section className="bio-theory-block" id={block.id} key={block.id}>
-            <div className="bio-theory-block__rail" aria-hidden="true">
-              <span>{String(index + 1).padStart(2, "0")}</span>
-              <i />
-            </div>
-            <div className="bio-theory-block__body">
-              <div className="bio-theory-block__heading">
-                <div>
-                  <PriorityBadge priority={block.priority} />
-                  <h3>{block.title}</h3>
-                </div>
-              </div>
-
-              <div className="bio-theory-block__text">
-                {block.theory.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
-              </div>
-
-              <div className="bio-key-idea">
-                <span>Idea que debes conservar</span>
-                <p>{block.keyIdea}</p>
-              </div>
-
-              {block.updatedNote ? (
-                <aside className="bio-current-note">
-                  <span>Dato actualizado</span>
-                  <p>{block.updatedNote}</p>
-                </aside>
-              ) : null}
-
-              <ExampleFlow block={block} />
-
-              <div className="bio-practice-prompt">
-                <span aria-hidden="true">✎</span>
-                <div>
-                  <strong>Ahora te toca a ti</strong>
-                  <p>{block.practice}</p>
-                </div>
-              </div>
-            </div>
-          </section>
-        ))}
+        <ModeToggle mode={readingMode} onChange={onReadingModeChange} />
+        <LessonReader mode={readingMode} theme={theme} />
       </article>
 
       <RecallCards
@@ -984,6 +846,18 @@ export default function BioCourse({
   onOpenReview,
 }: BioCourseProps) {
   const [activeThemeNumber, setActiveThemeNumber] = useState<number | null>(null);
+  // El conmutador solo aparece dentro de una lección, que nunca se renderiza en
+  // el servidor, así que se puede leer la preferencia guardada de entrada.
+  const [readingMode, setReadingMode] = useState<ReadingMode>(readStoredMode);
+
+  const changeReadingMode = (mode: ReadingMode) => {
+    setReadingMode(mode);
+    try {
+      localStorage.setItem("bio-reading-mode-v1", mode);
+    } catch {
+      /* la preferencia dura solo esta sesión si no hay almacenamiento */
+    }
+  };
   const activeTheme = useMemo(
     () => bioThemes.find((theme) => theme.number === activeThemeNumber),
     [activeThemeNumber],
@@ -1041,6 +915,8 @@ export default function BioCourse({
         onEarn={onEarn}
         onOpenLab={onOpenLab}
         onOpenTheme={openTheme}
+        onReadingModeChange={changeReadingMode}
+        readingMode={readingMode}
         theme={activeTheme}
       />
     );

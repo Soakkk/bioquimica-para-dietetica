@@ -1,14 +1,23 @@
 # Bioquímica para Dietética
 
-Curso web interactivo en español para estudiar los 12 temas de Bioquímica de la FP de Dietética con una ruta intensiva de tres semanas y una cuarta semana opcional de consolidación.
+Curso web interactivo en español para estudiar los 12 temas de Bioquímica de la FP de Dietética. Sin calendario impuesto: se avanza al ritmo de cada persona y la app recuerda por dónde iba.
 
 ## Qué incluye
 
-- Tema 1: química del carbono, nomenclatura, grupos funcionales, isomería y laboratorio molecular.
-- Temas 2–12: hidratos de carbono, lípidos, proteínas, ácidos nucleicos, agua y minerales, vitaminas, metabolismo, digestión y las rutas metabólicas principales.
-- Teoría y ejemplos en el mismo recorrido, preguntas de recuerdo activo, casos aplicados a Dietética, evaluación inmediata y seguimiento del progreso.
-- Valores y terminología actuales, con notas breves cuando el libro utiliza datos históricos.
-- Tutor contextual para explicar conceptos dentro de la propia app.
+- Los 12 temas del temario: química del carbono, hidratos, lípidos, proteínas, ácidos nucleicos, agua y minerales, vitaminas, metabolismo, digestión y las rutas metabólicas principales.
+- **Teoría explicada, no resumida**: 187 secciones y más de 400 párrafos escritos para entenderse de una lectura, con ejemplos resueltos paso a paso.
+- **Dos formas de leer la misma lección**, con un conmutador en cada tema:
+  - *Lectura continua*: todo seguido, para leer del tirón.
+  - *Paso a paso*: una idea por pantalla, con progreso guardado por tema.
+- Recuerdo activo, casos aplicados a Dietética, evaluación inmediata y seguimiento del progreso.
+- Valores y terminología actuales, con una nota breve cuando el libro de referencia usa datos históricos (NADH ≈ 2,5 ATP, cetogénesis hepática sin SCOT, lipasa y 2-monoacilglicéridos, 7 clases EC...).
+- Laboratorio molecular y gimnasio de nomenclatura para el Tema 1.
+
+## Cómo está organizado el contenido
+
+La teoría se escribe una sola vez, en `app/bio-course-sections.ts`, dividida en secciones. De esa única fuente salen las dos vistas: la lectura continua las encadena y el modo paso a paso las sirve de una en una. Añadir contenido no obliga a mantener dos versiones.
+
+Un bloque sin secciones escritas sigue funcionando: el lector reconstruye la lectura a partir de las frases de `app/bio-course-data.ts`.
 
 ## Desarrollo local
 
