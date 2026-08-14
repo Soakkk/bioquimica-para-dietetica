@@ -130,11 +130,12 @@ export default function ChainBranchLesson({ onEarn, onAsk, embedded = false }: {
   const [hint, setHint] = useState(false);
   const [autoNext, setAutoNext] = useState(true);
   const [completed, setCompleted] = useState<number[]>([]);
+  const [hydrated, setHydrated] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const current = exercises[index];
 
   useEffect(() => {
-    const loadTimer = window.setTimeout(() => {
+    queueMicrotask(() => {
       try {
         const raw = localStorage.getItem("carbon-chain-branch-v1");
         if (raw) {
@@ -143,13 +144,13 @@ export default function ChainBranchLesson({ onEarn, onAsk, embedded = false }: {
           setAutoNext(data.autoNext ?? true);
         }
       } catch { /* El entrenamiento sigue funcionando sin progreso guardado. */ }
-    }, 0);
-    return () => window.clearTimeout(loadTimer);
+      finally { setHydrated(true); }
+    });
   }, []);
 
   useEffect(() => {
-    localStorage.setItem("carbon-chain-branch-v1", JSON.stringify({ completed, autoNext }));
-  }, [completed, autoNext]);
+    if (hydrated) localStorage.setItem("carbon-chain-branch-v1", JSON.stringify({ completed, autoNext }));
+  }, [completed, autoNext, hydrated]);
 
   useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
 

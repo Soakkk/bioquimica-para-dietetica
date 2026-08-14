@@ -39,6 +39,18 @@ const puzzles: Puzzle[] = [
   { id:"pz-butanoico", level:3, family:"Ácido", name:"ácido butanoico", answer:["CH₃","—","CH₂","—","CH₂","—","COOH"], extras:["CHO","OH"], hint:"Cuenta el carbono del COOH dentro de los cuatro carbonos.", explain:"La estructura es CH₃—CH₂—CH₂—COOH." },
 ];
 
+const puzzleStorageKey = "carbon-nomenclature-puzzle-v1";
+const puzzleIds = new Set(puzzles.map((puzzle) => puzzle.id));
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function validPuzzleIds(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return Array.from(new Set(value.filter((id): id is string => typeof id === "string" && puzzleIds.has(id))));
+}
+
 function shuffle<T>(items: T[]) {
   const copy = [...items];
   for (let i = copy.length - 1; i > 0; i--) {
@@ -63,14 +75,25 @@ export default function NomenclaturePuzzle({ onEarn, onAsk }: { onEarn: (amount:
   const current = levelPuzzles[Math.min(index, levelPuzzles.length - 1)];
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem("carbon-nomenclature-puzzle-v1");
-      if (raw) { const data = JSON.parse(raw); setCompleted(data.completed ?? []); setAutoNext(data.autoNext ?? true); }
-    } finally { setHydrated(true); }
+    queueMicrotask(() => {
+      try {
+        const raw = localStorage.getItem(puzzleStorageKey);
+        if (raw) {
+          const data: unknown = JSON.parse(raw);
+          if (!isRecord(data)) throw new Error("Progreso del puzle no válido");
+          setCompleted(validPuzzleIds(data.completed));
+          setAutoNext(typeof data.autoNext === "boolean" ? data.autoNext : true);
+        }
+      } catch {
+        try { localStorage.removeItem(puzzleStorageKey); } catch { /* El puzle seguirá funcionando sin almacenamiento. */ }
+      } finally { setHydrated(true); }
+    });
   }, []);
 
   useEffect(() => {
-    if (hydrated) localStorage.setItem("carbon-nomenclature-puzzle-v1", JSON.stringify({ completed, autoNext }));
+    if (!hydrated) return;
+    try { localStorage.setItem(puzzleStorageKey, JSON.stringify({ completed, autoNext })); }
+    catch { /* El puzle sigue disponible aunque el navegador no permita guardar. */ }
   }, [completed, autoNext, hydrated]);
 
   useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);

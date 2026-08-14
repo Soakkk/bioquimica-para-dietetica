@@ -122,12 +122,13 @@ export default function IntegratedReview({ onEarn, onAsk }: { onEarn: (amount: n
   const [mastered, setMastered] = useState<string[]>([]);
   const [progress, setProgress] = useState<SavedProgress>({});
   const [autoNext, setAutoNext] = useState(true);
+  const [hydrated, setHydrated] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const route = routes.find((item) => item.id === routeId) ?? null;
   const question = route?.questions[index];
 
   useEffect(() => {
-    const loadTimer = window.setTimeout(() => {
+    queueMicrotask(() => {
       try {
         const raw = localStorage.getItem("carbon-integrated-review-v1");
         if (raw) {
@@ -135,13 +136,13 @@ export default function IntegratedReview({ onEarn, onAsk }: { onEarn: (amount: n
           setProgress(data.progress ?? {}); setMastered(data.mastered ?? []); setAutoNext(data.autoNext ?? true);
         }
       } catch { /* El repaso funciona aunque el navegador no conserve progreso. */ }
-    }, 0);
-    return () => window.clearTimeout(loadTimer);
+      finally { setHydrated(true); }
+    });
   }, []);
 
   useEffect(() => {
-    localStorage.setItem("carbon-integrated-review-v1", JSON.stringify({ progress, mastered, autoNext }));
-  }, [progress, mastered, autoNext]);
+    if (hydrated) localStorage.setItem("carbon-integrated-review-v1", JSON.stringify({ progress, mastered, autoNext }));
+  }, [progress, mastered, autoNext, hydrated]);
 
   useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
 

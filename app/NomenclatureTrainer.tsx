@@ -69,6 +69,33 @@ const tasks: TrainerTask[] = [
 
 type Stats = Record<Family, { right: number; wrong: number }>;
 const emptyStats = () => Object.fromEntries(families.map((f) => [f, { right: 0, wrong: 0 }])) as Stats;
+const trainerStorageKey = "carbon-nomenclature-progress-v1";
+const taskIds = new Set(tasks.map((task) => task.id));
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function validTaskIds(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return Array.from(new Set(value.filter((id): id is string => typeof id === "string" && taskIds.has(id))));
+}
+
+function validCount(value: unknown): number {
+  return typeof value === "number" && Number.isFinite(value) && value >= 0 ? Math.floor(value) : 0;
+}
+
+function validStats(value: unknown): Stats {
+  const clean = emptyStats();
+  if (!isRecord(value)) return clean;
+  families.forEach((family) => {
+    const entry = value[family];
+    if (isRecord(entry)) {
+      clean[family] = { right: validCount(entry.right), wrong: validCount(entry.wrong) };
+    }
+  });
+  return clean;
+}
 
 export default function NomenclatureTrainer({ onEarn, onAsk }: { onEarn: (amount: number) => void; onAsk: (text: string) => void }) {
   const [activity, setActivity] = useState<"trainer" | "puzzle">("trainer");
@@ -89,18 +116,27 @@ export default function NomenclatureTrainer({ onEarn, onAsk }: { onEarn: (amount
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem("carbon-nomenclature-progress-v1");
-      if (raw) {
-        const data = JSON.parse(raw);
-        setMastered(data.mastered ?? []); setFailed(data.failed ?? []); setStats(data.stats ?? emptyStats());
-        setAutoNext(data.autoNext ?? true);
-      }
-    } finally { setHydrated(true); }
+    queueMicrotask(() => {
+      try {
+        const raw = localStorage.getItem(trainerStorageKey);
+        if (raw) {
+          const data: unknown = JSON.parse(raw);
+          if (!isRecord(data)) throw new Error("Progreso de nomenclatura no válido");
+          setMastered(validTaskIds(data.mastered));
+          setFailed(validTaskIds(data.failed));
+          setStats(validStats(data.stats));
+          setAutoNext(typeof data.autoNext === "boolean" ? data.autoNext : true);
+        }
+      } catch {
+        try { localStorage.removeItem(trainerStorageKey); } catch { /* El módulo seguirá funcionando sin almacenamiento. */ }
+      } finally { setHydrated(true); }
+    });
   }, []);
 
   useEffect(() => {
-    if (hydrated) localStorage.setItem("carbon-nomenclature-progress-v1", JSON.stringify({ mastered, failed, stats, autoNext }));
+    if (!hydrated) return;
+    try { localStorage.setItem(trainerStorageKey, JSON.stringify({ mastered, failed, stats, autoNext })); }
+    catch { /* La práctica sigue disponible aunque el navegador no permita guardar. */ }
   }, [mastered, failed, stats, autoNext, hydrated]);
 
   useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);

@@ -6,11 +6,12 @@ import IntegratedReview from "./IntegratedReview";
 import CourseDepth from "./CourseDepth";
 import InlineLessonPractice from "./InlineLessonPractice";
 import ChainBranchLesson from "./ChainBranchLesson";
+import BioCourse from "./BioCourse";
 
 type ElementKey = "C" | "H" | "O" | "N";
 type Atom = { id: number; element: ElementKey; x: number; y: number };
 type Bond = { id: number; a: number; b: number; order: 1 | 2 | 3 };
-type Mode = "learn" | "practice" | "nomenclature" | "lab";
+type Mode = "program" | "learn" | "practice" | "nomenclature" | "lab";
 
 const valence: Record<ElementKey, number> = { C: 4, H: 1, O: 2, N: 3 };
 
@@ -260,11 +261,15 @@ function Formula({ text }: { text: string }) {
 }
 
 export default function Home() {
-  const [mode, setMode] = useState<Mode>("learn");
+  const [mode, setMode] = useState<Mode>("program");
   const [moduleId, setModuleId] = useState(0);
   const [completed, setCompleted] = useState<number[]>([]);
   const [solved, setSolved] = useState<number[]>([]);
   const [xp, setXp] = useState(0);
+  const [completedThemes, setCompletedThemes] = useState<number[]>([]);
+  const [themeScores, setThemeScores] = useState<Record<number, number>>({});
+  const [xpAwards, setXpAwards] = useState<string[]>([]);
+  const [resetEpoch, setResetEpoch] = useState(0);
   const [level, setLevel] = useState(1);
   const [questionAt, setQuestionAt] = useState(0);
   const [practiceModuleFilter, setPracticeModuleFilter] = useState<number | null>(null);
@@ -286,21 +291,65 @@ export default function Home() {
   const [tutorOpen, setTutorOpen] = useState(false);
   const [tutorInput, setTutorInput] = useState("");
   const [tutorMessages, setTutorMessages] = useState<{ role: "user" | "tutor"; text: string }[]>([
-    { role: "tutor", text: "¡Hola! Soy tu tutor del carbono. Pregúntame qué parte no te cuadra y la razonamos paso a paso." },
+    { role: "tutor", text: "¡Hola! Soy tu tutor de Bioquímica para Dietética. Dime qué concepto no te cuadra y lo conectamos paso a paso con lo que ya sabes." },
   ]);
   const [hydrated, setHydrated] = useState(false);
   const canvasRef = useRef<HTMLDivElement>(null);
   const dragging = useRef<{ id: number; dx: number; dy: number } | null>(null);
+  const tutorInputRef = useRef<HTMLInputElement>(null);
+  const tutorLaunchRef = useRef<HTMLButtonElement>(null);
+  const xpAwardsRef = useRef<Set<string>>(new Set());
+  const labCheckLockedRef = useRef(false);
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem("carbon-lab-progress");
-      if (raw) {
-        const data = JSON.parse(raw);
-        setCompleted(data.completed ?? []);
-        setSolved(data.solved ?? []);
-        setXp(data.xp ?? 0);
+    const readRecord = (key: string): Record<string, unknown> | null => {
+      const raw = localStorage.getItem(key);
+      if (!raw) return null;
+      try {
+        const parsed: unknown = JSON.parse(raw);
+        if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) return parsed as Record<string, unknown>;
+      } catch {
+        // Solo se descarta el registro dañado; el resto del progreso sigue intacto.
       }
+      localStorage.removeItem(key);
+      return null;
+    };
+    const numberList = (value: unknown, max?: number) => Array.isArray(value)
+      ? Array.from(new Set(value.filter((item): item is number => Number.isInteger(item) && item >= 0 && (max === undefined || item <= max))))
+      : [];
+    const safeXp = (value: unknown) => typeof value === "number" && Number.isFinite(value) && value >= 0 ? Math.floor(value) : 0;
+
+    try {
+      const carbonData = readRecord("carbon-lab-progress");
+      if (carbonData) {
+        setCompleted(numberList(carbonData.completed, modules.length - 1));
+        setSolved(numberList(carbonData.solved));
+        setXp(safeXp(carbonData.xp));
+      }
+      const globalData = readRecord("bioquimica-dietetica-progress-v1");
+      if (globalData) {
+        setCompletedThemes(numberList(globalData.completedThemes, 12).filter((item) => item >= 1));
+        const scores: Record<number, number> = {};
+        if (globalData.themeScores && typeof globalData.themeScores === "object" && !Array.isArray(globalData.themeScores)) {
+          Object.entries(globalData.themeScores).forEach(([key, value]) => {
+            const theme = Number(key);
+            if (Number.isInteger(theme) && theme >= 1 && theme <= 12 && typeof value === "number" && Number.isFinite(value)) scores[theme] = Math.max(0, Math.min(100, Math.round(value)));
+          });
+        }
+        setThemeScores(scores);
+        const awards = Array.isArray(globalData.xpAwards)
+          ? Array.from(new Set(globalData.xpAwards.filter((item): item is string => typeof item === "string" && item.length > 0 && item.length < 120)))
+          : [];
+        xpAwardsRef.current = new Set(awards);
+        setXpAwards(awards);
+        setXp((value) => Math.max(value, safeXp(globalData.xp)));
+      }
+      const hash = window.location.hash;
+      if (hash === "#carbono") setMode("learn");
+      else if (hash === "#repaso") setMode("practice");
+      else if (hash === "#laboratorio") setMode("lab");
+      else if (hash === "#nomenclatura") setMode("nomenclature");
+      else setMode("program");
     } finally { setHydrated(true); }
   }, []);
 
@@ -308,7 +357,39 @@ export default function Home() {
     if (hydrated) localStorage.setItem("carbon-lab-progress", JSON.stringify({ completed, solved, xp }));
   }, [completed, solved, xp, hydrated]);
 
-  const courseProgress = Math.round(((completed.length + solved.length) / (modules.length + questions.length)) * 100);
+  useEffect(() => {
+    if (hydrated) localStorage.setItem("bioquimica-dietetica-progress-v1", JSON.stringify({ completedThemes, themeScores, xp, xpAwards, updatedAt: new Date().toISOString() }));
+  }, [completedThemes, themeScores, xp, xpAwards, hydrated]);
+
+  useEffect(() => {
+    const onPopState = () => {
+      const hash = window.location.hash;
+      if (hash === "#carbono") setMode("learn");
+      else if (hash === "#repaso") setMode("practice");
+      else if (hash === "#laboratorio") setMode("lab");
+      else if (hash === "#nomenclatura") setMode("nomenclature");
+      else setMode("program");
+      window.scrollTo({ top: 0 });
+    };
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, []);
+
+  useEffect(() => {
+    if (!tutorOpen) return;
+    queueMicrotask(() => tutorInputRef.current?.focus());
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      setTutorOpen(false);
+      queueMicrotask(() => tutorLaunchRef.current?.focus());
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [tutorOpen]);
+
+  const carbonThemeDone = completed.length === modules.length;
+  const globalThemeCount = new Set([...completedThemes, ...(carbonThemeDone ? [1] : [])]).size;
+  const courseProgress = Math.round(globalThemeCount / 12 * 100);
   const currentModule = modules[moduleId];
   const indexedQuestions = questions.map((q, i) => ({ ...q, globalIndex: i }));
   const lessonQuestions = indexedQuestions.filter((q) => questionTheory[q.globalIndex] === moduleId);
@@ -326,13 +407,23 @@ export default function Home() {
     return totals;
   }, [atoms, bonds]);
 
-  function earn(amount: number) { setXp((v) => v + amount); }
+  function earn(amount: number, awardId?: string) {
+    if (awardId) {
+      if (xpAwardsRef.current.has(awardId)) return;
+      xpAwardsRef.current.add(awardId);
+      setXpAwards(Array.from(xpAwardsRef.current));
+    }
+    setXp((value) => value + amount);
+  }
 
   function markModule() {
     if (!completed.includes(moduleId)) { setCompleted((v) => [...v, moduleId]); earn(15); }
+    if (moduleId === modules.length - 1 && !completedThemes.includes(1)) setCompletedThemes((value) => [...value, 1]);
     if (moduleId < modules.length - 1) {
       setModuleId(moduleId + 1);
       setTimeout(() => document.getElementById("guide")?.scrollIntoView({ behavior: "smooth" }), 50);
+    } else {
+      switchMode("program");
     }
   }
 
@@ -416,8 +507,7 @@ export default function Home() {
     if (valence[element]) addAtom(element, e.clientX - box.left, e.clientY - box.top);
   }
 
-  function atomPointerDown(e: PointerEvent<HTMLButtonElement>, atom: Atom) {
-    e.stopPropagation();
+  function activateAtom(atom: Atom) {
     if (tool === "delete") {
       setAtoms((v) => v.filter((a) => a.id !== atom.id));
       setBonds((v) => v.filter((b) => b.a !== atom.id && b.b !== atom.id));
@@ -433,6 +523,11 @@ export default function Home() {
       } else { setFirstAtom(null); setLabFeedback("Selección cancelada. Toca un átomo para empezar de nuevo."); }
       return;
     }
+  }
+
+  function atomPointerDown(e: PointerEvent<HTMLButtonElement>, atom: Atom) {
+    e.stopPropagation();
+    if (tool !== "move") return;
     const box = canvasRef.current?.getBoundingClientRect();
     if (!box) return;
     dragging.current = { id: atom.id, dx: e.clientX - box.left - atom.x, dy: e.clientY - box.top - atom.y };
@@ -454,9 +549,10 @@ export default function Home() {
     if (tool === "delete") { setBonds((v) => v.filter((b) => b.id !== id)); setLabFeedback("Enlace eliminado."); }
   }
 
-  function clearLab() { setAtoms([]); setBonds([]); setFirstAtom(null); setTool("bond"); setLabFeedback("Paso 1: añade los átomos. El enlace simple ya está seleccionado."); }
+  function clearLab() { labCheckLockedRef.current = false; setAtoms([]); setBonds([]); setFirstAtom(null); setTool("bond"); setLabFeedback("Paso 1: añade los átomos. El enlace simple ya está seleccionado."); }
 
   function checkLab() {
+    if (labCheckLockedRef.current) { setLabFeedback(`✓ ${currentTarget.name} ya está comprobado. Elige otro reto o pulsa «Limpiar todo» para construirlo de nuevo.`); return; }
     if (!atoms.length) { setLabFeedback("Todavía no hay una molécula que comprobar."); return; }
     const over = atoms.find((a) => (bondTotals[a.id] ?? 0) > valence[a.element]);
     if (over) { setLabFeedback(`⚠ El ${over.element} marcado supera su valencia: tiene ${bondTotals[over.id]} y admite ${valence[over.element]}.`); return; }
@@ -469,21 +565,55 @@ export default function Home() {
     if (!sameCounts) { setLabFeedback(`La estructura es válida hasta aquí, pero el reto pide ${currentTarget.formula}. Revisa la cantidad de cada átomo.`); return; }
     if (open) { setLabFeedback(`Al ${open.element} seleccionado todavía le faltan ${valence[open.element] - (bondTotals[open.id] ?? 0)} enlace(s).`); return; }
     if (orders !== targetOrders) { setLabFeedback("Los átomos están, pero revisa si el enlace entre carbonos debe ser simple, doble o triple."); return; }
+    labCheckLockedRef.current = true;
     setLabFeedback(`✓ ¡${currentTarget.name} correcto! Todas las valencias y enlaces encajan.`);
     if (labReturnQuestion !== null) {
-      if (!solved.includes(labReturnQuestion)) { setSolved((v) => [...v, labReturnQuestion]); earn(25); }
+      if (!solved.includes(labReturnQuestion)) { setSolved((v) => [...v, labReturnQuestion]); earn(25, `lab:question:${labReturnQuestion}`); }
       setTimeout(() => { setLabReturnQuestion(null); setMode("practice"); nextQuestion(); }, 1600);
     } else if (labReturnModule !== null) {
-      earn(25);
+      earn(25, `lab:theme-1:module:${labReturnModule}:target:${targetAt}`);
       const returnTo = labReturnModule;
       setTimeout(() => { setLabReturnModule(null); setModuleId(returnTo); setMode("learn"); setTimeout(() => document.getElementById("lesson-practice")?.scrollIntoView({ behavior: "smooth" }), 50); }, 1600);
-    } else earn(25);
+    } else earn(25, `lab:free:target:${targetAt}`);
   }
 
-  function switchMode(next: Mode) { setMode(next); window.scrollTo({ top: 0, behavior: "smooth" }); }
+  function switchMode(next: Mode, replace = false) {
+    setMode(next);
+    const hash = next === "program" ? "#plan" : next === "learn" ? "#carbono" : next === "practice" ? "#repaso" : next === "lab" ? "#laboratorio" : "#nomenclatura";
+    if (typeof window !== "undefined") {
+      if (window.location.hash !== hash) {
+        window.history[replace ? "replaceState" : "pushState"]({ mode: next }, "", hash);
+      }
+      // pushState no dispara popstate/hashchange: avisamos a los módulos internos
+      // para que la barra superior, el logo y los botones atrás/adelante queden sincronizados.
+      window.dispatchEvent(new PopStateEvent("popstate", { state: { mode: next } }));
+    }
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function completeBioTheme(themeId: number, score: number) {
+    setThemeScores((value) => ({ ...value, [themeId]: Math.max(value[themeId] ?? 0, score) }));
+    if (score >= 80 && !completedThemes.includes(themeId)) {
+      setCompletedThemes((value) => [...value, themeId]);
+      earn(40);
+    }
+  }
 
   function tutorReply(raw: string) {
     const q = raw.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    if (/mas facil|otro ejemplo|no lo entiendo/.test(q)) return "Vamos a reducirlo a tres preguntas: ¿qué molécula entra?, ¿qué cambio químico ocurre? y ¿qué producto sale? Escríbeme además el nombre del concepto —por ejemplo, glucólisis, enlace peptídico o micela— y te lo reconstruyo desde cero con un ejemplo.";
+    if (/conecta.*dietetica|aplica.*dietetica|para que sirve.*dietetica/.test(q)) return "En Dietética la estructura ayuda a predecir digestión y transporte; las rutas explican qué ocurre tras comer o ayunar; y los micronutrientes cobran sentido al ver la reacción en la que colaboran. Dime el concepto concreto y trazaremos el recorrido desde el alimento hasta su efecto metabólico.";
+    if (/nadh|fadh2|fadh|cadena respiratoria|fosforilacion oxidativa|atp por/.test(q)) return "Usaremos los valores actuales aproximados: cada NADH permite formar unas 2,5 moléculas de ATP y cada FADH₂ unas 1,5. Por eso la oxidación completa de una glucosa suele estimarse en 30–32 ATP, no en los 36–38 de esquemas antiguos.";
+    if (/glucolisis|piruvato|acetil.?coa|krebs|ciclo del citrato/.test(q)) return "Piensa en una ruta conectada: la glucólisis transforma glucosa en piruvato en el citosol; con oxígeno, el piruvato se convierte en acetil-CoA; su grupo acetilo entra en el ciclo de Krebs y los electrones captados por NADH y FADH₂ alimentan la fosforilación oxidativa.";
+    if (/saturad|insaturad|doble enlace.*grasa|grasa.*doble enlace|omega.?3|omega.?6|trans/.test(q)) return "En un ácido graso, saturado significa que su cadena no tiene C=C; monoinsaturado, que tiene uno; y poliinsaturado, que tiene varios. El número omega cuenta desde el extremo metilo hasta el primer doble enlace. Cis/trans describe la disposición alrededor de C=C, no la cantidad de dobles enlaces.";
+    if (/lipido|triglicer|acido graso|beta.?oxid|cuerpo.? ceton|cetosis/.test(q)) return "Un triglicérido es glicerol unido por tres enlaces éster a tres ácidos grasos. En la digestión se hidrolizan esos ésteres; después, los ácidos grasos pueden degradarse por beta-oxidación a acetil-CoA. Si el hígado acumula mucho acetil-CoA, puede fabricar cuerpos cetónicos; los produce, pero no los utiliza como combustible.";
+    if (/glucid|hidrato.? de carbono|monosacar|disacar|almidon|glucogeno|fibra/.test(q)) return "Ordénalos por tamaño: monosacáridos como glucosa; disacáridos como lactosa; y polisacáridos como almidón o glucógeno. La digestión rompe enlaces glucosídicos hasta unidades absorbibles. La fibra escapa total o parcialmente a nuestras enzimas y modifica tránsito, microbiota y respuesta glucémica.";
+    if (/digestion|absorcion|sglt1|glut5|pept1|quilomicron|micela/.test(q)) return "Digestión es romper moléculas; absorción es atravesar el epitelio intestinal. Glucosa y galactosa entran sobre todo por SGLT1, fructosa por GLUT5; di- y tripéptidos pueden entrar por PEPT1; los lípidos necesitan bilis, micelas y, para la mayor parte de la grasa de cadena larga, salida en quilomicrones.";
+    if (/proteina|aminoacido|enzima|desnaturaliz|estructura primaria|estructura secundaria/.test(q)) return "Los aminoácidos se unen por enlaces peptídicos para formar proteínas. La secuencia es la estructura primaria; los plegamientos posteriores crean las estructuras secundaria, terciaria y, a veces, cuaternaria. Desnaturalizar suele alterar el plegamiento y la función, no romper la secuencia de enlaces peptídicos.";
+    if (/transamin|desamin|urea|nitrogen|amoniaco/.test(q)) return "El grupo amino puede transferirse mediante transaminación. El nitrógeno que sobra termina en gran parte como amoníaco y después como urea en el hígado, una forma mucho menos tóxica que viaja a los riñones para eliminarse.";
+    if (/adn|arn|nucleot|replicacion|transcripcion|traduccion/.test(q)) return "Un nucleótido contiene pentosa, fosfato y base nitrogenada. El ADN almacena información; la transcripción produce ARN a partir de ADN y la traducción usa el ARN mensajero para ordenar aminoácidos en una proteína.";
+    if (/vitamina|coenzima|hidrosoluble|liposoluble/.test(q)) return "Las vitaminas no aportan energía, pero muchas ayudan a que las rutas funcionen como partes de coenzimas. A, D, E y K son liposolubles; las del grupo B y la C son hidrosolubles. En la app distinguimos función, fuentes, déficit y precauciones sin convertir cifras antiguas del libro en reglas universales.";
+    if (/agua|osmosis|osmolar|sodio|potasio|electrolit|mineral/.test(q)) return "El agua se desplaza según gradientes osmóticos y los iones están distribuidos de forma desigual: el sodio predomina fuera de la célula y el potasio dentro. Esa separación, mantenida entre otros mecanismos por la Na⁺/K⁺-ATPasa, es esencial para volumen, impulsos nerviosos y contracción muscular.";
     if (/electrones? de valencia|que es valencia|valencia y/.test(q)) return "Son conceptos distintos: los electrones de valencia son los electrones que el átomo SÍ tiene en su capa externa; la valencia indica cuántos enlaces suele formar. En el carbono ambos números suelen ser 4, y por eso se confunden.";
     if (/octeto|ocho electrones|8 electrones/.test(q)) return "La regla del octeto dice que muchos átomos de C, N y O son especialmente estables cuando cuentan 8 electrones a su alrededor. No significa que siempre se queden con electrones ajenos: en un enlace covalente los comparten.";
     if (/simple|doble|triple|rayas?/.test(q)) return "Cuenta rayas: — vale 1, = vale 2 y ≡ vale 3. En CH₂=CH₂, cada C suma 2 enlaces C—H y 2 del C=C: total 4. En HC≡CH suma 1 + 3: también 4.";
@@ -509,19 +639,36 @@ export default function Home() {
     setTutorOpen(true);
   }
 
+  function closeTutor() {
+    setTutorOpen(false);
+    queueMicrotask(() => tutorLaunchRef.current?.focus());
+  }
+
   return (
-    <main>
+    <div className="app-shell">
       <header className="topbar">
-        <button className="brand" onClick={() => switchMode("learn")} aria-label="Ir a la guía">
-          <span className="brand-mark">C</span><span>Laboratorio<br/><b>del Carbono</b></span>
+        <button className="brand" onClick={() => switchMode("program")} aria-label="Ir al plan de estudio">
+          <span className="brand-mark">B</span><span>Bioquímica<br/><b>para Dietética</b></span>
         </button>
         <nav aria-label="Secciones principales">
-          <button className={mode === "learn" ? "active" : ""} onClick={() => switchMode("learn")}><span>01</span> Ruta de estudio</button>
-          <button className={mode === "practice" ? "active" : ""} onClick={() => { setPracticeModuleFilter(null); setPracticeView("routes"); setQuestionAt(0); switchMode("practice"); }}><span>02</span> Repaso final</button>
-          <button className={mode === "lab" && labReturnModule === null && labReturnQuestion === null ? "active" : ""} onClick={() => { setLabReturnModule(null); setLabReturnQuestion(null); switchMode("lab"); }}><span>03</span> Pizarra libre</button>
+          <button aria-current={mode === "program" ? "page" : undefined} className={mode === "program" ? "active" : ""} onClick={() => switchMode("program")}><span>01</span> Mi ruta</button>
+          <button aria-current={mode === "learn" || mode === "nomenclature" ? "page" : undefined} className={mode === "learn" || mode === "nomenclature" ? "active" : ""} onClick={() => switchMode("learn")}><span>02</span> Tema 1 · Carbono</button>
+          <button aria-current={mode === "practice" ? "page" : undefined} className={mode === "practice" ? "active" : ""} onClick={() => { setPracticeModuleFilter(null); setPracticeView("routes"); setQuestionAt(0); switchMode("practice"); }}><span>03</span> Repasar</button>
+          <button aria-current={mode === "lab" && labReturnModule === null && labReturnQuestion === null ? "page" : undefined} className={mode === "lab" && labReturnModule === null && labReturnQuestion === null ? "active" : ""} onClick={() => { setLabReturnModule(null); setLabReturnQuestion(null); switchMode("lab"); }}><span>04</span> Laboratorio</button>
         </nav>
         <div className="xp"><span>✦</span><b>{xp} XP</b><small>{courseProgress}% completado</small></div>
       </header>
+
+      {mode === "program" && <BioCourse key={`bio-course-${resetEpoch}`}
+        completedThemes={Array.from(new Set([...completedThemes, ...(carbonThemeDone ? [1] : [])]))}
+        scores={themeScores}
+        onComplete={completeBioTheme}
+        onEarn={earn}
+        onOpenCarbon={() => switchMode("learn")}
+        onOpenLab={() => { setLabReturnModule(null); setLabReturnQuestion(null); switchMode("lab"); }}
+        onOpenReview={() => { setPracticeModuleFilter(null); setPracticeView("routes"); setQuestionAt(0); switchMode("practice"); }}
+        onAsk={askTutor}
+      />}
 
       {mode === "learn" && <>
         <section className="hero">
@@ -532,6 +679,7 @@ export default function Home() {
             <div className="hero-actions">
               <button className="primary" onClick={() => document.getElementById("guide")?.scrollIntoView({ behavior: "smooth" })}>Empezar la guía <span>→</span></button>
               <button className="secondary" onClick={() => switchMode("lab")}>Abrir la pizarra</button>
+              <button className="secondary" onClick={() => switchMode("program")}>← Volver al plan</button>
             </div>
           </div>
           <div className="hero-visual" aria-label="Comparación de enlaces del carbono">
@@ -579,11 +727,11 @@ export default function Home() {
             {moduleId === 4 && <div className="group-map">{functionalGroups.map((g) => <div key={g[0]}><span>{g[0]}</span><b>{g[1]}</b><small>{g[2]}</small></div>)}</div>}
             {moduleId === 1 && <div className="degree-compare"><div><b>¿Cuántos enlaces suma?</b><strong>Valencia</strong><p>Cuenta rayas: — vale 1, = vale 2 y ≡ vale 3.</p></div><span>≠</span><div><b>¿A cuántos C toca?</b><strong>Grado</strong><p>1 C = primario; 2 = secundario; 3 = terciario; 4 = cuaternario.</p></div></div>}
             <InlineLessonPractice key={moduleId} moduleId={moduleId} moduleTitle={currentModule.title} questions={lessonQuestions} solved={solved} onSolve={solveInline} onAsk={askTutor} onOpenLab={startLessonQuestionLab}/>
-            {moduleId === 2 && <div id="branch-embedded"><ChainBranchLesson embedded onEarn={earn} onAsk={askTutor}/></div>}
+            {moduleId === 2 && <div id="branch-embedded"><ChainBranchLesson key={`branches-${resetEpoch}`} embedded onEarn={earn} onAsk={askTutor}/></div>}
             {(moduleId === 0 || moduleId === 1 || moduleId === 3) && <section className="lesson-lab-activity"><div><span>PASO 4 · ACTIVIDAD APLICADA</span><h3>Compruébalo construyendo</h3><p>La pizarra se abre con moléculas relacionadas con esta lección y vuelve aquí cuando la estructura sea correcta.</p></div><div>{(moduleId === 0 ? [0,1,2] : moduleId === 1 ? [0,3,4,5] : [3,4,5]).map((targetIndex) => <button key={targetIndex} onClick={() => startLessonLab(targetIndex)}><b>{labTargets[targetIndex].formula}</b><small>{labTargets[targetIndex].name}</small></button>)}</div></section>}
             {(moduleId === 2 || moduleId === 3) && <div className="optional-free-tool"><div><span>PRÁCTICA EXTRA OPCIONAL</span><b>Gimnasio de nomenclatura</b><p>Úsalo después de completar los ejercicios de esta lección si quieres practicar muchas variantes.</p></div><button onClick={() => switchMode("nomenclature")}>Abrir práctica libre →</button></div>}
             <div className="coach-tip"><span>!</span><div><b>Error frecuente</b><p>{currentModule.tip}</p></div></div>
-            <div className="lesson-footer unified-finish"><div><span>PASO 5</span><b>{lessonQuestions.filter((q) => solved.includes(q.globalIndex)).length}/{lessonQuestions.length} ejercicios dominados</b></div><button className="primary" onClick={markModule}>{completed.includes(moduleId) ? "Ir a la siguiente lección" : "Completar tema · +15 XP"} <span>→</span></button></div>
+            <div className="lesson-footer unified-finish"><div><span>PASO 5</span><b>{lessonQuestions.filter((q) => solved.includes(q.globalIndex)).length}/{lessonQuestions.length} ejercicios dominados</b></div><button className="primary" onClick={markModule}>{moduleId === modules.length - 1 ? (completed.includes(moduleId) ? "Volver a mi ruta" : "Terminar Tema 1 · +15 XP") : (completed.includes(moduleId) ? "Ir a la siguiente lección" : "Completar tema · +15 XP")} <span>→</span></button></div>
           </div>
         </section>
       </>}
@@ -591,7 +739,7 @@ export default function Home() {
       {mode === "practice" && <section className="practice-page">
         <div className="page-intro"><span className="kicker"><i/> {practiceModuleFilter !== null ? "PRÁCTICA RELACIONADA CON LA TEORÍA" : practiceView === "routes" ? "REPASO TEÓRICO Y PRÁCTICO" : "ENTRENAMIENTO ADAPTATIVO"}</span><h1>{practiceModuleFilter !== null ? <>Afianza la<br/><em>lección {practiceModuleFilter + 1}.</em></> : practiceView === "routes" ? <>Relaciona.<br/><em>Aplica. Recuerda.</em></> : "Piensa como un químico."}</h1><p>{practiceModuleFilter !== null ? `Estos ejercicios trabajan únicamente “${modules[practiceModuleFilter].title}”, siguiendo el mismo orden de ideas y ejemplos.` : practiceView === "routes" ? "Repasa grupos de temas que dependen unos de otros y descubre exactamente qué conexión necesitas reforzar." : "No basta con acertar: después de cada respuesta verás la regla que permite deducirla."}</p></div>
         {practiceModuleFilter === null && <div className="practice-view-tabs"><button className={practiceView === "routes" ? "active" : ""} onClick={() => setPracticeView("routes")}><span>01</span><div><b>Repaso por bloques</b><small>Teoría conectada + diagnóstico</small></div></button><button className={practiceView === "free" ? "active" : ""} onClick={() => setPracticeView("free")}><span>02</span><div><b>Ejercicios por nivel</b><small>Práctica rápida y libre</small></div></button></div>}
-        {practiceModuleFilter === null && practiceView === "routes" ? <IntegratedReview onEarn={earn} onAsk={askTutor}/> : <>
+        {practiceModuleFilter === null && practiceView === "routes" ? <IntegratedReview key={`review-${resetEpoch}`} onEarn={earn} onAsk={askTutor}/> : <>
         {practiceModuleFilter !== null && <div className="lesson-practice-route"><span>1 · TEORÍA LEÍDA</span><i>→</i><span>2 · EJEMPLOS RESUELTOS</span><i>→</i><b>3 · PRÁCTICA DE LA LECCIÓN</b><button onClick={() => { setModuleId(practiceModuleFilter); setMode("learn"); setTimeout(() => document.getElementById("guide")?.scrollIntoView({ behavior: "smooth" }), 50); }}>← Volver a la teoría</button></div>}
         <div className="level-tabs">{levelNames.map((name, i) => <button key={name} className={practiceModuleFilter === null && level === i + 1 ? "active" : ""} onClick={() => { setPracticeModuleFilter(null); setLevel(i + 1); setQuestionAt(0); setPicked(null); setFeedback(null); setShowHint(false); }}><span>{i + 1}</span><b>{name}</b><small>{questions.filter((q) => q.level === i + 1).length} retos</small></button>)}</div>
         <div className="practice-shell">
@@ -609,7 +757,7 @@ export default function Home() {
         </>}
       </section>}
 
-      {mode === "nomenclature" && <><div className="context-return"><span>PRÁCTICA EXTRA · LECCIÓN {moduleId + 1}</span><b>Has abierto el gimnasio desde «{currentModule.title}».</b><button onClick={() => { switchMode("learn"); setTimeout(() => document.getElementById("lesson-practice")?.scrollIntoView({ behavior: "smooth" }), 50); }}>← Volver a esta lección</button></div><NomenclatureTrainer onEarn={earn} onAsk={askTutor}/></>}
+      {mode === "nomenclature" && <><div className="context-return"><span>PRÁCTICA EXTRA · LECCIÓN {moduleId + 1}</span><b>Has abierto el gimnasio desde «{currentModule.title}».</b><button onClick={() => { switchMode("learn"); setTimeout(() => document.getElementById("lesson-practice")?.scrollIntoView({ behavior: "smooth" }), 50); }}>← Volver a esta lección</button></div><NomenclatureTrainer key={`nomenclature-${resetEpoch}`} onEarn={earn} onAsk={askTutor}/></>}
 
       {mode === "lab" && <section className="lab-page">
         <div className="page-intro lab-intro"><span className="kicker"><i/> PIZARRA MOLECULAR</span><h1>Construye. Une. Comprueba.</h1><p>Añade los átomos y únelos tocando primero uno y después otro. La guía te indica siempre el siguiente paso.</p></div>
@@ -626,9 +774,9 @@ export default function Home() {
               <div className={bonds.length ? "done" : ""}><span>4</span><p><b>Comprueba</b><small>la molécula</small></p></div>
             </div>
             <div className="board-tools">
-              <div className="bond-tools"><span>PASO 2 · ELIGE EL ENLACE</span>{([1, 2, 3] as const).map((o) => <button key={o} aria-label={`Crear enlace ${o === 1 ? "simple" : o === 2 ? "doble" : "triple"}`} className={tool === "bond" && bondOrder === o ? "active" : ""} onClick={() => { setTool("bond"); setBondOrder(o); setFirstAtom(null); setLabFeedback(`Enlace ${o === 1 ? "simple" : o === 2 ? "doble" : "triple"} activo. Toca el primer átomo y después el segundo.`); }}><b>{o === 1 ? "Simple" : o === 2 ? "Doble" : "Triple"}</b><em>{o === 1 ? "—" : o === 2 ? "=" : "≡"}</em></button>)}</div>
-              <button className={tool === "move" ? "active" : ""} onClick={() => { setTool("move"); setFirstAtom(null); setLabFeedback("Modo mover activo. Arrastra un átomo; después vuelve a elegir un enlace."); }}>✥ Mover</button>
-              <button className={tool === "delete" ? "active danger" : ""} onClick={() => { setTool("delete"); setFirstAtom(null); }}>⌫ Borrar</button><button onClick={clearLab}>Limpiar todo</button>
+              <div className="bond-tools"><span>PASO 2 · ELIGE EL ENLACE</span>{([1, 2, 3] as const).map((o) => <button key={o} aria-label={`Crear enlace ${o === 1 ? "simple" : o === 2 ? "doble" : "triple"}`} aria-pressed={tool === "bond" && bondOrder === o} className={tool === "bond" && bondOrder === o ? "active" : ""} onClick={() => { setTool("bond"); setBondOrder(o); setFirstAtom(null); setLabFeedback(`Enlace ${o === 1 ? "simple" : o === 2 ? "doble" : "triple"} activo. Toca el primer átomo y después el segundo.`); }}><b>{o === 1 ? "Simple" : o === 2 ? "Doble" : "Triple"}</b><em>{o === 1 ? "—" : o === 2 ? "=" : "≡"}</em></button>)}</div>
+              <button aria-pressed={tool === "move"} className={tool === "move" ? "active" : ""} onClick={() => { setTool("move"); setFirstAtom(null); setLabFeedback("Modo mover activo. Arrastra un átomo; después vuelve a elegir un enlace."); }}>✥ Mover</button>
+              <button aria-pressed={tool === "delete"} className={tool === "delete" ? "active danger" : ""} onClick={() => { setTool("delete"); setFirstAtom(null); }}>⌫ Borrar</button><button onClick={clearLab}>Limpiar todo</button>
             </div>
             <div className="molecule-board" ref={canvasRef} onDragOver={(e) => e.preventDefault()} onDrop={onDrop}>
               <div className="board-watermark"><span>LAB // 01</span><b>{atoms.length ? firstAtom !== null ? "PRIMER ÁTOMO ELEGIDO · TOCA EL SEGUNDO" : "TOCA DOS ÁTOMOS PARA UNIRLOS" : "TOCA UN ÁTOMO DE LA PALETA"}</b></div>
@@ -637,24 +785,28 @@ export default function Home() {
                 const dx = b.x - a.x, dy = b.y - a.y, length = Math.sqrt(dx * dx + dy * dy), angle = Math.atan2(dy, dx) * 180 / Math.PI;
                 return <button aria-label={`Enlace de orden ${bond.order}`} className={`drawn-bond order-${bond.order}`} key={bond.id} onClick={(e) => { e.stopPropagation(); removeBond(bond.id); }} style={{ width: length, left: a.x, top: a.y, transform: `rotate(${angle}deg)` }}><i/><i/><i/></button>;
               })}
-              {atoms.map((atom) => { const used = bondTotals[atom.id] ?? 0; const status = used > valence[atom.element] ? "over" : used === valence[atom.element] ? "full" : "open"; return <button key={atom.id} aria-label={`${atom.element}, ${used} de ${valence[atom.element]} enlaces`} className={`board-atom atom-${atom.element.toLowerCase()} ${status} ${firstAtom === atom.id ? "chosen" : ""}`} style={{ left: atom.x, top: atom.y }} onPointerDown={(e) => atomPointerDown(e, atom)} onPointerMove={atomPointerMove} onPointerUp={atomPointerUp}><b>{atom.element}</b><small>{used}/{valence[atom.element]}</small></button>; })}
+              {atoms.map((atom) => { const used = bondTotals[atom.id] ?? 0; const status = used > valence[atom.element] ? "over" : used === valence[atom.element] ? "full" : "open"; return <button key={atom.id} aria-label={`${atom.element}, ${used} de ${valence[atom.element]} enlaces`} className={`board-atom atom-${atom.element.toLowerCase()} ${status} ${firstAtom === atom.id ? "chosen" : ""}`} style={{ left: atom.x, top: atom.y }} onClick={(event) => { event.stopPropagation(); if (tool !== "move") activateAtom(atom); }} onKeyDown={(event) => { if ((event.key === "Enter" || event.key === " ") && tool !== "move") { event.preventDefault(); event.stopPropagation(); activateAtom(atom); } }} onPointerDown={(e) => atomPointerDown(e, atom)} onPointerMove={atomPointerMove} onPointerUp={atomPointerUp}><b>{atom.element}</b><small>{used}/{valence[atom.element]}</small></button>; })}
             </div>
             <div className="lab-status"><div className="status-key"><span><i className="open"/> Incompleto</span><span><i className="full"/> Valencia completa</span><span><i className="over"/> Exceso</span></div><button className="primary" onClick={checkLab}>Comprobar molécula</button></div>
           </div>
-          <aside className="inspector"><span>ANALIZADOR</span><div className="formula-readout"><small>FÓRMULA ACTUAL</small><b>{atoms.length ? (["C", "H", "N", "O"] as ElementKey[]).map((e) => { const n = atoms.filter((a) => a.element === e).length; return n ? `${e}${n > 1 ? n : ""}` : ""; }).join("") : "—"}</b></div><div className="inspection-list">{atoms.length ? atoms.map((a, i) => <div key={a.id}><span>{a.element}{i + 1}</span><i><u style={{ width: `${Math.min(100, bondTotals[a.id] / valence[a.element] * 100)}%` }}/></i><b>{bondTotals[a.id]}/{valence[a.element]}</b></div>) : <p>Aquí verás la cuenta de enlaces de cada átomo.</p>}</div><div className="lab-message">{labFeedback}</div></aside>
+          <aside className="inspector"><span>ANALIZADOR</span><div className="formula-readout"><small>FÓRMULA ACTUAL</small><b>{atoms.length ? (["C", "H", "N", "O"] as ElementKey[]).map((e) => { const n = atoms.filter((a) => a.element === e).length; return n ? `${e}${n > 1 ? n : ""}` : ""; }).join("") : "—"}</b></div><div className="inspection-list">{atoms.length ? atoms.map((a, i) => <div key={a.id}><span>{a.element}{i + 1}</span><i><u style={{ width: `${Math.min(100, bondTotals[a.id] / valence[a.element] * 100)}%` }}/></i><b>{bondTotals[a.id]}/{valence[a.element]}</b></div>) : <p>Aquí verás la cuenta de enlaces de cada átomo.</p>}</div><div className="lab-message" role="status" aria-live="polite">{labFeedback}</div></aside>
         </div>
       </section>}
 
-      <button className="tutor-launch" onClick={() => setTutorOpen((v) => !v)} aria-label="Abrir tutor de química"><span>?</span><div><b>Pregunta al tutor</b><small>Te lo explico paso a paso</small></div></button>
-      {tutorOpen && <aside className="tutor-panel" aria-label="Tutor de química">
-        <div className="tutor-head"><div><span>?</span><div><b>Tutor del carbono</b><small>Guía socrática · en español</small></div></div><button onClick={() => setTutorOpen(false)} aria-label="Cerrar tutor">×</button></div>
-        <div className="tutor-context">Ahora estás en: <b>{mode === "learn" ? currentModule.title : mode === "practice" ? `Nivel ${level}: ${levelNames[level - 1]}` : mode === "nomenclature" ? "Gimnasio de nomenclatura" : `Laboratorio · ${currentTarget.name}`}</b></div>
-        <div className="tutor-chat">{tutorMessages.map((m, i) => <div className={`tutor-message ${m.role}`} key={i}><span>{m.role === "tutor" ? "C" : "Tú"}</span><p>{m.text}</p></div>)}</div>
-        <div className="tutor-chips"><button onClick={() => askTutor("¿Por qué el carbono hace 4 enlaces?")}>¿Por qué C hace 4?</button><button onClick={() => askTutor("Diferencia entre amina y amida")}>Amina vs. amida</button></div>
-        <form className="tutor-form" onSubmit={(e) => { e.preventDefault(); askTutor(); }}><input value={tutorInput} onChange={(e) => setTutorInput(e.target.value)} placeholder="Escribe tu duda o una fórmula…" aria-label="Pregunta para el tutor"/><button type="submit">→</button></form>
+      <button ref={tutorLaunchRef} className="tutor-launch" aria-controls="bio-tutor-panel" aria-expanded={tutorOpen} onClick={() => tutorOpen ? closeTutor() : setTutorOpen(true)} aria-label={tutorOpen ? "Cerrar tutor de bioquímica" : "Abrir tutor de bioquímica"}><span>?</span><div><b>Pregunta al tutor</b><small>Te lo explico paso a paso</small></div></button>
+      {tutorOpen && <aside id="bio-tutor-panel" className="tutor-panel" role="dialog" aria-labelledby="bio-tutor-title">
+        <div className="tutor-head"><div><span>?</span><div><b id="bio-tutor-title">Tutor de Bioquímica</b><small>Conexiones claras · Dietética</small></div></div><button onClick={closeTutor} aria-label="Cerrar tutor">×</button></div>
+        <div className="tutor-context">Ahora estás en: <b>{mode === "program" ? "Ruta completa de Bioquímica" : mode === "learn" ? currentModule.title : mode === "practice" ? `Repaso · ${levelNames[level - 1]}` : mode === "nomenclature" ? "Gimnasio de nomenclatura" : `Laboratorio · ${currentTarget.name}`}</b></div>
+        <div className="tutor-chat" role="log" aria-live="polite">{tutorMessages.map((m, i) => <div className={`tutor-message ${m.role}`} key={i}><span>{m.role === "tutor" ? "C" : "Tú"}</span><p>{m.text}</p></div>)}</div>
+        <div className="tutor-chips"><button onClick={() => askTutor("Explícamelo más fácil con un ejemplo")}>Más fácil</button><button onClick={() => askTutor("¿Cómo se conecta esto con Dietética?")}>Conectar con Dietética</button><button onClick={() => askTutor("¿Por qué el carbono hace 4 enlaces?")}>C hace 4 enlaces</button></div>
+        <form className="tutor-form" onSubmit={(e) => { e.preventDefault(); askTutor(); }}><input ref={tutorInputRef} value={tutorInput} onChange={(e) => setTutorInput(e.target.value)} placeholder="Escribe tu duda o una fórmula…" aria-label="Pregunta para el tutor"/><button type="submit" aria-label="Enviar pregunta">→</button></form>
       </aside>}
 
-      <footer><div><span className="brand-mark">C</span><b>Laboratorio del Carbono</b></div><p>Comprender · dibujar · comprobar</p><button onClick={() => { localStorage.removeItem("carbon-lab-progress"); setCompleted([]); setSolved([]); setXp(0); }}>Reiniciar progreso</button></footer>
-    </main>
+      <footer><div><span className="brand-mark">B</span><b>Bioquímica para Dietética</b></div><p>Comprender · relacionar · aplicar</p><button onClick={() => {
+        ["carbon-lab-progress", "bioquimica-dietetica-progress-v1", "carbon-nomenclature-puzzle-v1", "carbon-chain-branch-v1", "carbon-nomenclature-progress-v1", "carbon-integrated-review-v1"].forEach((key) => localStorage.removeItem(key));
+        xpAwardsRef.current.clear();
+        setCompleted([]); setSolved([]); setCompletedThemes([]); setThemeScores({}); setXpAwards([]); setXp(0); setResetEpoch((value) => value + 1);
+      }}>Reiniciar progreso</button></footer>
+    </div>
   );
 }
