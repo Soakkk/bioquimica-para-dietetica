@@ -14,19 +14,22 @@ const root = resolve(import.meta.dirname, "..");
 const out = resolve(root, "dist-static");
 const PORT = 4173;
 const ORIGIN = `http://localhost:${PORT}`;
+// GitHub Pages sirve bajo /bioquimica-para-dietetica/; en local el prefijo va vacío.
+const BASE_PATH = (process.env.BASE_PATH ?? "").replace(/\/$/, "");
+const PAGE_URL = `${ORIGIN}${BASE_PATH}/`;
 
 async function waitForServer(timeoutMs = 60_000) {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
     try {
-      const response = await fetch(ORIGIN, { signal: AbortSignal.timeout(2000) });
+      const response = await fetch(PAGE_URL, { signal: AbortSignal.timeout(2000) });
       if (response.ok) return;
     } catch {
       /* todavía arrancando */
     }
     await new Promise((r) => setTimeout(r, 500));
   }
-  throw new Error(`El servidor de producción no respondió en ${ORIGIN}`);
+  throw new Error(`El servidor de producción no respondió en ${PAGE_URL}`);
 }
 
 const server = spawn("npx", ["vinext", "start", "-p", String(PORT)], {
@@ -38,14 +41,17 @@ const server = spawn("npx", ["vinext", "start", "-p", String(PORT)], {
 try {
   await waitForServer();
 
-  const html = await (await fetch(ORIGIN)).text();
+  const html = await (await fetch(PAGE_URL)).text();
   if (!html.includes("Bioquímica")) {
     throw new Error("La página capturada no contiene el curso: revisa el build");
   }
 
   await rm(out, { recursive: true, force: true });
   await mkdir(out, { recursive: true });
-  await cp(resolve(root, "dist/client"), out, { recursive: true });
+  // Con BASE_PATH, el build ya anida los assets bajo el prefijo. La carpeta que
+  // se publica se sirve *como* ese prefijo, así que hay que copiar desde dentro
+  // para no repetirlo dos veces en la URL.
+  await cp(resolve(root, `dist/client${BASE_PATH}`), out, { recursive: true });
 
   await writeFile(resolve(out, "index.html"), html, "utf8");
   // Cualquier ruta desconocida devuelve la misma app; el hash hace el resto.

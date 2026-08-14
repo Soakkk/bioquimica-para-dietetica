@@ -35,13 +35,6 @@ function themeFromId(id: string): CourseTheme | undefined {
   return bioThemes.find((theme) => theme.id === id);
 }
 
-function formatMinutes(minutes: number): string {
-  if (minutes < 60) return `${minutes} min`;
-  const hours = Math.floor(minutes / 60);
-  const rest = minutes % 60;
-  return rest ? `${hours} h ${rest} min` : `${hours} h`;
-}
-
 function normalizeAnswer(value: string): string {
   const subscripts: Record<string, string> = {
     "₀": "0",
@@ -730,22 +723,14 @@ function ThemeLesson({
             <h1>{theme.title}</h1>
             <p className="bio-lesson-hero__book">{theme.bookTheme}</p>
           </div>
-          <aside className="bio-lesson-hero__meta">
-            <span><b>{formatMinutes(theme.estimatedMinutes)}</b> de trabajo total</span>
-            <span><b>{theme.blocks.length}</b> bloques conectados</span>
-            <span><b>5</b> preguntas de dominio</span>
-          </aside>
         </div>
 
-        <div className="bio-objectives">
-          <div>
-            <p className="bio-kicker">AL TERMINAR PODRÁS</p>
-            <h2>Objetivos de aprendizaje</h2>
-          </div>
+        <details className="bio-objectives">
+          <summary>Qué podrás hacer al terminar ({theme.objectives.length} objetivos)</summary>
           <ul>
             {theme.objectives.map((objective) => <li key={objective}>{objective}</li>)}
           </ul>
-        </div>
+        </details>
 
         {prerequisiteThemes.length ? (
           <div className="bio-prerequisites">
@@ -759,21 +744,7 @@ function ThemeLesson({
         ) : null}
       </header>
 
-      <section className="bio-update-note" aria-label="Criterio de actualización científica">
-        <span aria-hidden="true">↻</span>
-        <div>
-          <strong>Trabajamos con términos y valores actuales</strong>
-          <p>Cuando el libro usa una cifra o interpretación antigua, aparece una nota breve. Por ejemplo: NADH ≈ 2,5 ATP y FADH₂ ≈ 1,5 ATP.</p>
-        </div>
-      </section>
-
       <article className="bio-reading">
-        <div className="bio-reading__intro">
-          <p className="bio-kicker">TEORÍA</p>
-          <h2>Lee de arriba abajo: cada bloque prepara el siguiente</h2>
-          <p>Teoría explicada, un ejemplo trazado y una tarea concreta para comprobarla.</p>
-        </div>
-
         <ModeToggle mode={readingMode} onChange={onReadingModeChange} />
         <LessonReader mode={readingMode} theme={theme} />
       </article>

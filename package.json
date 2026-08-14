@@ -13,7 +13,7 @@
     "test:critical": "node --test tests/critical-flows.test.mjs",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern dist-static --ignore-pattern .next",
     "db:generate": "drizzle-kit generate",
-    "build:static": "npm run build && node scripts/build-static.mjs"
+    "build:static": "BASE_PATH=${BASE_PATH:-} npm run build && node scripts/build-static.mjs"
   },
   "dependencies": {
     "drizzle-orm": "0.45.2",

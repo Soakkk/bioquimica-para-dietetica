@@ -543,3 +543,37 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
 .study-body { max-width: 880px; }
 .study-section > p { font-size: 17px; line-height: 1.78; max-width: 64ch; }
 .lesson-intro { font-size: 18px; max-width: 68ch; }
+
+/* --- cabecera de lección compacta: la teoría empieza antes --- */
+.bio-lesson-hero { padding-top: 20px; padding-bottom: 18px; }
+.bio-lesson-hero h1 { margin: 8px 0 4px; }
+
+.bio-objectives {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--cream);
+  padding: 0;
+  margin: 16px 0 0;
+  display: block;
+}
+.bio-objectives > summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 13px 16px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--teal);
+}
+.bio-objectives > summary::-webkit-details-marker { display: none; }
+.bio-objectives > summary::after { content: " +"; font-family: var(--font-geist-mono); }
+.bio-objectives[open] > summary::after { content: " −"; }
+.bio-objectives > summary:focus-visible { outline: 3px solid var(--coral); outline-offset: -3px; }
+.bio-objectives ul {
+  margin: 0;
+  padding: 0 16px 16px 32px;
+  display: grid;
+  gap: 7px;
+}
+.bio-objectives li { font-size: 14px; line-height: 1.55; color: #3d4f54; }
