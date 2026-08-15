@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { bioThemes } from "./bio-course-data";
 import { questionBank, type BankQuestion } from "./bio-question-bank";
+import { legacyTema1Questions } from "./bio-question-bank-legacy";
 import {
   dueQueue,
   loadSchedule,
@@ -31,7 +32,7 @@ function allQuestions(): BankQuestion[] {
       tags: question.tags,
     })),
   );
-  return [...fromThemes, ...questionBank];
+  return [...fromThemes, ...questionBank, ...legacyTema1Questions];
 }
 
 function normalize(value: string): string {

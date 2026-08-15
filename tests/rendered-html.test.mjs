@@ -80,7 +80,7 @@ test("renderiza la identidad del curso de Bioquímica para Dietética", async ()
     /<title>\s*Bioquímica para Dietética\s+—\s+Curso interactivo\s*<\/title>/i,
   );
   assert.match(text, /Bioquímica para Dietética/i);
-  assert.match(text, /Mi ruta/i);
+  assert.match(text, /Índice general/i);
 });
 
 test("la página inicial expone la ruta completa de doce temas", async () => {
@@ -94,7 +94,7 @@ test("la página inicial expone la ruta completa de doce temas", async () => {
     );
   }
 
-  assert.match(text, /(?:3 semanas|21 días|12 temas)/i);
+  assert.match(text, /12 capítulos/i);
 });
 
 test("no vuelve a mostrar ni cargar la plantilla provisional", async () => {

@@ -3,10 +3,8 @@
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import {
   bioThemes,
-  courseSources,
   integrationRoutes,
   type CourseTheme,
-  type IntegrationRoute,
 } from "./bio-course-data";
 import ProgressBackup from "./ProgressBackup";
 import Chapter from "./Chapter";
@@ -17,9 +15,9 @@ type BioCourseProps = {
   scores: Record<number, number>;
   onComplete: (themeId: number, score: number) => void;
   onEarn: (n: number, awardId?: string) => void;
-  onOpenCarbon: () => void;
   onOpenLab: () => void;
   onOpenReview: () => void;
+  onOpenNomenclature: () => void;
 };
 
 
@@ -35,38 +33,6 @@ function firstUnfinishedTheme(completedThemes: number[]): CourseTheme | undefine
   return bioThemes.find((theme) => !completedThemes.includes(theme.number));
 }
 
-function IntegrationCard({
-  route,
-  onOpenTheme,
-}: {
-  route: IntegrationRoute;
-  onOpenTheme: (number: number) => void;
-}) {
-  const firstTheme = route.themeIds.map(themeFromId).find(Boolean);
-  return (
-    <article className="bio-integration-card">
-      <p className="bio-kicker">Ruta de integración</p>
-      <h3>{route.title}</h3>
-      <p>{route.description}</p>
-      <div className="bio-integration-card__flow" aria-label={`Hitos de ${route.title}`}>
-        {route.milestones.slice(0, 5).map((milestone, index) => (
-          <span key={milestone}>
-            <b>{index + 1}</b>
-            {milestone}
-          </span>
-        ))}
-      </div>
-      <p className="bio-integration-card__challenge">
-        <strong>Reto final:</strong> {route.finalChallenge}
-      </p>
-      {firstTheme ? (
-        <button className="bio-text-button" onClick={() => onOpenTheme(firstTheme.number)} type="button">
-          Empezar por el primer tema →
-        </button>
-      ) : null}
-    </article>
-  );
-}
 
 function CourseDashboard({
   completedThemes,
@@ -74,17 +40,19 @@ function CourseDashboard({
   onOpenTheme,
   onOpenLab,
   onOpenReview,
+  onOpenNomenclature,
 }: {
   completedThemes: number[];
   scores: Record<number, number>;
   onOpenTheme: (number: number) => void;
   onOpenLab: () => void;
   onOpenReview: () => void;
+  onOpenNomenclature: () => void;
 }) {
-  // "Superado" (prueba ≥80 %) y "por dónde ibas" son cosas distintas, y antes
-  // el panel solo conocía la primera. El servidor no puede saber lo segundo,
-  // así que se lee con useSyncExternalStore: durante la hidratación devuelve
-  // el valor del servidor y solo después el del navegador, sin desajuste.
+  // "Superado" y "por dónde ibas" son cosas distintas. El servidor no puede
+  // saber lo segundo, así que se lee con useSyncExternalStore: durante la
+  // hidratación devuelve el valor del servidor y solo después el del
+  // navegador, sin desajuste.
   const lastThemeNumber = useSyncExternalStore(
     () => () => {},
     () => readLastTheme(),
@@ -99,185 +67,200 @@ function CourseDashboard({
   }, [lastThemeNumber]);
 
   const nextTheme = firstUnfinishedTheme(completedThemes);
-  const requiredThemes = bioThemes.filter((theme) => theme.number <= 12);
-  const completedRequired = requiredThemes.filter((theme) => completedThemes.includes(theme.number)).length;
-  const overallProgress = Math.round((completedRequired / requiredThemes.length) * 100);
-  const weakAreas = Object.entries(scores)
-    .map(([number, score]) => ({ theme: bioThemes.find((item) => item.number === Number(number)), score }))
-    .filter((item): item is { theme: CourseTheme; score: number } => Boolean(item.theme) && item.score < 80)
-    .sort((a, b) => a.score - b.score)
-    .slice(0, 4);
+  const done = bioThemes.filter((theme) => completedThemes.includes(theme.number)).length;
+  const sections = bioThemes.reduce((total, theme) => total + theme.blocks.length, 0);
+  const weak = Object.entries(scores).filter(([, score]) => score < 80).length;
+
+  const openSection = (themeNumber: number, blockId: string) => {
+    onOpenTheme(themeNumber);
+    // El capítulo se monta en el mismo tick; el salto espera a que exista.
+    window.setTimeout(() => {
+      document.getElementById(blockId)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 60);
+  };
 
   return (
-    <main className="bio-course bio-course--dashboard">
-      <section className="bio-dashboard-hero">
-        <div className="bio-dashboard-hero__copy">
-          <p className="bio-kicker">BIOQUÍMICA PARA DIETÉTICA</p>
-          <h1>Mi temario</h1>
-          <p className="bio-dashboard-hero__lead">
-            Los doce temas con la teoría explicada, ejemplos resueltos y preguntas para comprobar que
-            se ha quedado. Sin calendario: avanzas cuando puedes y la app recuerda por dónde ibas.
+    <div className="tb">
+      <div className="tb-book tb-front" lang="es">
+        <header className="tb-title">
+          <p className="tb-imprint">Formación Profesional · Dietética</p>
+          <h1>Bioquímica para Dietética</h1>
+          <p className="tb-sub">
+            Los doce temas del programa, escritos para entenderse y no para memorizarse.
+            Cada sección abre con una pregunta y la responde al final.
           </p>
-          <div className="bio-dashboard-hero__actions">
-            {resume ? (
+
+          {resume ? (
+            <div className="tb-resume">
+              <p className="tb-where">
+                Ibas por el <b>capítulo {resume.theme.number}, {resume.theme.title}</b>
+                {resume.blockTitle ? <>, en <b>{resume.blockTitle}</b></> : null}.
+              </p>
               <button
-                className="bio-button bio-button--primary"
+                className="tb-btn tb-go"
+                type="button"
                 onClick={() => onOpenTheme(resume.theme.number)}
-                type="button"
               >
-                Seguir donde lo dejaste →
+                Seguir leyendo →
               </button>
-            ) : (
-              <button
-                className="bio-button bio-button--primary"
-                onClick={nextTheme ? () => onOpenTheme(nextTheme.number) : onOpenReview}
-                type="button"
-              >
-                {nextTheme ? `Empezar por el Tema ${nextTheme.number} →` : "Ruta principal completada · repasar →"}
-              </button>
-            )}
-            <button className="bio-button bio-button--secondary" onClick={onOpenReview} type="button">
-              Repaso de hoy
-            </button>
-            <button className="bio-button bio-button--ghost" onClick={onOpenLab} type="button">
-              Ir al laboratorio
-            </button>
-          </div>
-        </div>
-
-        <aside className="bio-dashboard-hero__progress" aria-label="Progreso general del curso">
-          <div className="bio-progress-ring" style={{ "--bio-progress": `${overallProgress * 3.6}deg` } as React.CSSProperties}>
-            <span>{overallProgress}%</span>
-          </div>
-          <div>
-            <strong>{completedRequired} de {requiredThemes.length} temas</strong>
-            <p>
-              {resume
-                ? `Ibas por Tema ${resume.theme.number}${resume.blockTitle ? ` · ${resume.blockTitle}` : ""}`
-                : nextTheme
-                  ? `Siguiente: ${nextTheme.title}`
-                  : "Ruta principal completada"}
-            </p>
-          </div>
-        </aside>
-      </section>
-
-      <section className="bio-dashboard-section" aria-labelledby="bio-weeks-title">
-        <div className="bio-section-heading">
-          <div>
-            <p className="bio-kicker">EL TEMARIO</p>
-            <h2 id="bio-weeks-title">Doce temas, y tú decides el ritmo</h2>
-          </div>
-          <p>Están en orden de dependencia: cada uno se apoya en los anteriores. Puedes ir seguido o saltar al que necesites.</p>
-        </div>
-        <ol className="bio-theme-list">
-          {bioThemes.map((theme) => {
-            const done = completedThemes.includes(theme.number);
-            const score = scores[theme.number];
-            return (
-              <li key={theme.id}>
-                <button
-                  className={`bio-theme-row${done ? " bio-theme-row--done" : ""}`}
-                  onClick={() => onOpenTheme(theme.number)}
-                  type="button"
-                >
-                  <span className="bio-theme-row__n" aria-hidden="true">
-                    {done ? "✓" : String(theme.number).padStart(2, "0")}
-                  </span>
-                  <span className="bio-theme-row__text">
-                    <strong>{theme.title}</strong>
-                    <small>{theme.eyebrow}</small>
-                  </span>
-                  <span className="bio-theme-row__meta">
-                    {typeof score === "number" ? <b>{score}%</b> : null}
-                    <em>{theme.blocks.length} bloques</em>
-                  </span>
-                </button>
-              </li>
-            );
-          })}
-        </ol>
-      </section>
-
-      <section className="bio-dashboard-section bio-dashboard-section--split" aria-labelledby="bio-reinforce-title">
-        <div className="bio-reinforce-panel">
-          <p className="bio-kicker">REPASO ADAPTATIVO</p>
-          <h2 id="bio-reinforce-title">Lo que conviene reforzar ahora</h2>
-          {weakAreas.length ? (
-            <div className="bio-weak-list">
-              {weakAreas.map(({ theme, score }) => (
-                <button key={theme.id} onClick={() => onOpenTheme(theme.number)} type="button">
-                  <span>Tema {theme.number}</span>
-                  <strong>{theme.title}</strong>
-                  <b>{score}%</b>
-                </button>
-              ))}
             </div>
           ) : (
-            <div className="bio-empty-state">
-              <span aria-hidden="true">◎</span>
-              <p>Cuando hagas una prueba, aquí aparecerán automáticamente los temas por debajo del 80%.</p>
+            <div className="tb-resume">
+              <p className="tb-where">Aún no has abierto ningún capítulo.</p>
+              <button
+                className="tb-btn tb-go"
+                type="button"
+                onClick={() => onOpenTheme(nextTheme?.number ?? 1)}
+              >
+                Empezar por el capítulo 1 →
+              </button>
             </div>
           )}
-          <button className="bio-button bio-button--secondary" onClick={onOpenReview} type="button">
-            Entrenar mis fallos →
-          </button>
-        </div>
 
-        <div className="bio-tool-panel">
-          <p className="bio-kicker">DOS ESPACIOS, DOS OBJETIVOS</p>
-          <h2>Practica con intención</h2>
-          <div className="bio-tool-panel__cards">
-            <button onClick={onOpenLab} type="button">
-              <span aria-hidden="true">⌁</span>
-              <strong>Laboratorio molecular</strong>
-              <p>Construye, enlaza y comprueba estructuras.</p>
-            </button>
-            <button onClick={onOpenReview} type="button">
-              <span aria-hidden="true">↻</span>
-              <strong>Repaso acumulativo</strong>
-              <p>Mezcla contenidos ya estudiados y recupera lo débil.</p>
-            </button>
+          <div className="tb-state">
+            <div><b>{done}</b> de 12 capítulos superados</div>
+            <div><b>{sections}</b> secciones en total</div>
+            {weak > 0 ? <div><b>{weak}</b> por reforzar</div> : null}
           </div>
-        </div>
-      </section>
+        </header>
 
-      <section className="bio-dashboard-section" aria-labelledby="bio-routes-title">
-        <div className="bio-section-heading">
-          <div>
-            <p className="bio-kicker">TRANSFERENCIA REAL</p>
-            <h2 id="bio-routes-title">Rutas que conectan los temas</h2>
-          </div>
-          <p>Úsalas al final de cada semana para explicar procesos completos, no definiciones aisladas.</p>
-        </div>
-        <div className="bio-integration-grid">
-          {integrationRoutes.map((route) => (
-            <IntegrationCard key={route.id} onOpenTheme={onOpenTheme} route={route} />
-          ))}
-        </div>
-      </section>
+        <section className="tb-howto" aria-labelledby="tb-howto-title">
+          <h2 id="tb-howto-title">Cómo se usa este libro</h2>
+          <p>
+            No hay calendario ni orden obligatorio. Lo único que conviene respetar es el ciclo
+            dentro de cada sección, porque de él depende que la teoría se quede.
+          </p>
+          <ol className="tb-steps">
+            <li>
+              <span className="tb-stepn">Primero</span>
+              <b>Apuesta sin saber</b>
+              <p>
+                Cada sección abre con una pregunta. Respóndela antes de leer nada, aunque vayas a
+                ciegas: no se te dirá si has acertado.
+              </p>
+            </li>
+            <li>
+              <span className="tb-stepn">Después</span>
+              <b>Lee buscando la respuesta</b>
+              <p>
+                La teoría viene a continuación. Al haber apostado, la lees con una pregunta
+                concreta en la cabeza en lugar de en piloto automático.
+              </p>
+            </li>
+            <li>
+              <span className="tb-stepn">Al cerrar</span>
+              <b>Destapa la resolución</b>
+              <p>
+                Al final de la sección se compara con lo que apostaste y, si fallaste, se explica
+                por qué falla esa opción concreta.
+              </p>
+            </li>
+            <li>
+              <span className="tb-stepn">Con el tiempo</span>
+              <b>Deja que vuelva</b>
+              <p>
+                Los ejercicios del capítulo alimentan el repaso espaciado: lo que fallas reaparece
+                pronto y lo que dominas tarda cada vez más.
+              </p>
+            </li>
+          </ol>
+        </section>
 
-      <ProgressBackup />
+        <section className="tb-contents" aria-labelledby="tb-contents-title">
+          <h2 id="tb-contents-title">Índice general</h2>
+          <p className="tb-hint">
+            Pulsa un capítulo para abrirlo por el principio, o una sección concreta para saltar
+            directamente a ella.
+          </p>
 
-      <section className="bio-sources" aria-labelledby="bio-sources-title">
-        <details>
-          <summary id="bio-sources-title">Fuentes y criterios de actualización</summary>
-          <div className="bio-sources__grid">
-            {courseSources.map((source) => (
-              <article key={source.id}>
-                <strong>{source.label}</strong>
-                <p>{source.role}</p>
-                {source.url ? (
-                  <a href={source.url} rel="noreferrer" target="_blank">
-                    Consultar fuente ↗
-                  </a>
-                ) : null}
+          {bioThemes.map((theme) => {
+            const isDone = completedThemes.includes(theme.number);
+            const isHere = resume?.theme.number === theme.number;
+            const score = scores[theme.number];
+            return (
+              <article className="tb-chap" key={theme.id}>
+                <span className="tb-cn">Cap. {theme.number}</span>
+                <div>
+                  <button className="tb-ctitle" type="button" onClick={() => onOpenTheme(theme.number)}>
+                    {theme.title}
+                  </button>
+                  <p className="tb-cmeta">
+                    {theme.blocks.length} secciones
+                    {isDone ? <> · <span className="tb-done">superado</span></> : null}
+                    {isHere && !isDone ? <> · <span className="tb-here">ibas por aquí</span></> : null}
+                    {!isDone && typeof score === "number" ? <> · última nota {score} %</> : null}
+                  </p>
+                </div>
+                <ol className="tb-secs">
+                  {theme.blocks.map((block, index) => (
+                    <li key={block.id}>
+                      <span className="tb-sn">
+                        {theme.number}.{index + 1}
+                      </span>
+                      <button type="button" onClick={() => openSection(theme.number, block.id)}>
+                        {block.title}
+                      </button>
+                    </li>
+                  ))}
+                </ol>
               </article>
+            );
+          })}
+        </section>
+
+        <section className="tb-appendix" aria-labelledby="tb-appendix-title">
+          <h2 id="tb-appendix-title">Apéndices</h2>
+          <ul className="tb-tools">
+            <li>
+              <button type="button" onClick={onOpenReview}>Repaso de hoy</button>
+              <p>
+                La cola de repetición espaciada con las preguntas de los doce capítulos. Devuelve
+                cada una cuando toca volver a verla.
+              </p>
+            </li>
+            <li>
+              <button type="button" onClick={onOpenLab}>Laboratorio molecular</button>
+              <p>
+                Construye moléculas átomo a átomo y comprueba la tetravalencia sobre el dibujo, no
+                sobre el papel.
+              </p>
+            </li>
+            <li>
+              <button type="button" onClick={onOpenNomenclature}>Gimnasio de nomenclatura</button>
+              <p>
+                Práctica libre de nombrar y formular, con muchas variantes seguidas y filtros por
+                familia.
+              </p>
+            </li>
+          </ul>
+        </section>
+
+        <section className="tb-appendix" aria-labelledby="tb-routes-title">
+          <h2 id="tb-routes-title">Itinerarios transversales</h2>
+          <p className="tb-hint">
+            Recorridos que atraviesan varios capítulos siguiendo una misma molécula. Útiles
+            cuando ya has leído las partes y quieres ver cómo encajan.
+          </p>
+          <ol className="tb-plist">
+            {integrationRoutes.map((route) => (
+              <li key={route.id}>
+                <span className="tb-pnum">{route.title}</span>
+                <p className="tb-ptext">{route.description}</p>
+                <p className="tb-cmeta">
+                  {route.themeIds
+                    .map((id) => themeFromId(id)?.number)
+                    .filter((number): number is number => typeof number === "number")
+                    .map((number) => `Cap. ${number}`)
+                    .join(" · ")}
+                </p>
+              </li>
             ))}
-          </div>
-        </details>
-      </section>
-    </main>
+          </ol>
+        </section>
+
+        <ProgressBackup />
+      </div>
+    </div>
   );
 }
 
@@ -286,6 +269,7 @@ export default function BioCourse({
   scores,
   onOpenLab,
   onOpenReview,
+  onOpenNomenclature,
 }: BioCourseProps) {
   const [activeThemeNumber, setActiveThemeNumber] = useState<number | null>(null);
   // El conmutador solo aparece dentro de una lección, que nunca se renderiza en
@@ -346,6 +330,7 @@ export default function BioCourse({
     <CourseDashboard
       completedThemes={completedThemes}
       onOpenLab={onOpenLab}
+      onOpenNomenclature={onOpenNomenclature}
       onOpenReview={onOpenReview}
       onOpenTheme={openTheme}
       scores={scores}

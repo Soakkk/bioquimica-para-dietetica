@@ -5,6 +5,7 @@ import { bioThemes, type CourseBlock, type CourseTheme } from "./bio-course-data
 import { blockSections, type BlockSection } from "./bio-course-sections";
 import { openingQuestions, type OpeningQuestion } from "./opening-questions";
 import { questionBank } from "./bio-question-bank";
+import { legacyTema1Questions } from "./bio-question-bank-legacy";
 
 /**
  * Un tema renderizado como capítulo de libro de texto.
@@ -192,7 +193,7 @@ function Problems({ theme, chapter }: { theme: CourseTheme; chapter: number }) {
       explanation: question.explanation,
       spaced: true,
     }));
-    const fromBank = questionBank
+    const fromBank = [...questionBank, ...legacyTema1Questions]
       .filter((question) => question.themeId === theme.id)
       .map((question) => ({
         id: question.id,
@@ -301,7 +302,9 @@ export default function Chapter({
               <a href="#ejercicios">Ejercicios del capítulo</a>
               <span className="tb-mark">
                 {theme.questions.length +
-                  questionBank.filter((question) => question.themeId === theme.id).length}
+                  [...questionBank, ...legacyTema1Questions].filter(
+                    (question) => question.themeId === theme.id,
+                  ).length}
               </span>
             </li>
           </ol>

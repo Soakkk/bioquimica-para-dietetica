@@ -502,3 +502,239 @@
   .tb-eq .tb-n { text-align: right; }
   .tb-runhead > div { flex-wrap: wrap; gap: 8px 14px; }
 }
+
+/* ============================================================
+   Portada e índice general — las primeras páginas del libro.
+   ============================================================ */
+
+.tb-front { padding: 0 0 110px; }
+
+/* portadilla */
+.tb-title {
+  padding: 84px 0 46px;
+  border-bottom: 2px solid var(--tb-ink);
+}
+.tb-title .tb-imprint {
+  font-family: var(--tb-sans);
+  font-size: 11.5px;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--tb-accent);
+  margin: 0 0 22px;
+}
+.tb-title h1 {
+  font-size: clamp(42px, 6vw, 76px);
+  line-height: 1.02;
+  letter-spacing: -.03em;
+  font-weight: 600;
+  margin: 0 0 20px;
+  max-width: 14ch;
+  text-wrap: balance;
+}
+.tb-title .tb-sub {
+  font-size: 21px;
+  line-height: 1.6;
+  color: var(--tb-ink-2);
+  max-width: 58ch;
+  margin: 0;
+}
+
+/* dónde lo dejaste — la línea que abre el libro por su página */
+.tb-resume {
+  display: flex;
+  gap: 18px;
+  align-items: baseline;
+  flex-wrap: wrap;
+  margin: 34px 0 0;
+  padding: 16px 0 0;
+  border-top: 1px solid var(--tb-rule);
+  font-family: var(--tb-sans);
+}
+.tb-resume .tb-where { font-size: 15px; line-height: 1.6; color: var(--tb-ink-2); margin: 0; }
+.tb-resume .tb-where b { color: var(--tb-ink); font-weight: 650; }
+.tb-resume .tb-go { margin-left: auto; }
+
+/* estado del estudio, dicho con palabras */
+.tb-state {
+  font-family: var(--tb-sans);
+  display: flex;
+  gap: 28px;
+  flex-wrap: wrap;
+  margin: 26px 0 0;
+  font-size: 14px;
+  color: var(--tb-ink-2);
+}
+.tb-state div { display: flex; gap: 8px; align-items: baseline; }
+.tb-state b { font-size: 19px; font-weight: 650; color: var(--tb-ink); font-variant-numeric: tabular-nums; }
+
+/* cómo usar el libro */
+.tb-howto { padding: 46px 0; border-bottom: 1px solid var(--tb-rule); }
+.tb-howto h2 {
+  font-size: 24px;
+  letter-spacing: -.02em;
+  font-weight: 600;
+  margin: 0 0 8px;
+}
+.tb-howto > p {
+  font-size: 18.5px;
+  line-height: 1.65;
+  color: var(--tb-ink-2);
+  max-width: 66ch;
+  margin: 0 0 26px;
+}
+.tb-steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 0 40px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--tb-sans);
+}
+.tb-steps li { padding: 16px 0; border-top: 1px solid var(--tb-hair); }
+.tb-steps .tb-stepn {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--tb-accent);
+  margin-bottom: 7px;
+}
+.tb-steps b { display: block; font-size: 15.5px; font-weight: 650; margin-bottom: 5px; }
+.tb-steps p { margin: 0; font-size: 14px; line-height: 1.6; color: var(--tb-ink-2); }
+
+/* índice general */
+.tb-contents { padding: 46px 0 0; }
+.tb-contents > h2 {
+  font-size: 24px;
+  letter-spacing: -.02em;
+  font-weight: 600;
+  margin: 0 0 6px;
+}
+.tb-contents > .tb-hint {
+  font-family: var(--tb-sans);
+  font-size: 14px;
+  color: var(--tb-ink-2);
+  margin: 0 0 30px;
+  max-width: 72ch;
+  line-height: 1.6;
+}
+
+.tb-chap {
+  border-top: 1px solid var(--tb-rule);
+  padding: 20px 0;
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr) minmax(0, 1.05fr);
+  column-gap: 30px;
+  align-items: start;
+}
+.tb-chap:last-child { border-bottom: 1px solid var(--tb-rule); }
+.tb-chap .tb-cn {
+  font-family: var(--tb-sans);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--tb-accent);
+  font-variant-numeric: tabular-nums;
+  padding-top: 4px;
+}
+.tb-chap .tb-ctitle {
+  background: none;
+  border: 0;
+  padding: 0;
+  text-align: left;
+  font-family: var(--tb-serif);
+  font-size: 21px;
+  font-weight: 600;
+  letter-spacing: -.015em;
+  color: var(--tb-ink);
+  cursor: pointer;
+  line-height: 1.3;
+}
+.tb-chap .tb-ctitle:hover { color: var(--tb-accent); }
+.tb-chap .tb-ctitle:focus-visible { outline: 2px solid var(--tb-accent); outline-offset: 3px; }
+.tb-chap .tb-cmeta {
+  font-family: var(--tb-sans);
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--tb-ink-3);
+  margin: 6px 0 0;
+}
+.tb-chap .tb-cmeta .tb-done { color: var(--tb-ok); font-weight: 650; }
+.tb-chap .tb-cmeta .tb-here { color: var(--tb-accent); font-weight: 650; }
+
+/* secciones del capítulo, en la columna derecha */
+.tb-secs {
+  margin: 2px 0 0;
+  padding: 0;
+  list-style: none;
+  columns: 2;
+  column-gap: 26px;
+}
+.tb-secs li {
+  font-family: var(--tb-sans);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--tb-ink-2);
+  padding: 4px 0;
+  break-inside: avoid;
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  gap: 8px;
+}
+.tb-secs .tb-sn { color: var(--tb-accent); font-variant-numeric: tabular-nums; }
+.tb-secs button {
+  background: none;
+  border: 0;
+  padding: 0;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+.tb-secs button:hover { color: var(--tb-ink); text-decoration: underline; text-underline-offset: 2px; }
+
+/* apéndices: herramientas del curso */
+.tb-appendix { margin-top: 54px; padding-top: 28px; border-top: 2px solid var(--tb-ink); }
+.tb-appendix h2 { font-size: 22px; font-weight: 600; letter-spacing: -.02em; margin: 0 0 20px; }
+.tb-tools {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 0 40px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.tb-tools li { padding: 16px 0; border-top: 1px solid var(--tb-hair); }
+.tb-tools button {
+  background: none;
+  border: 0;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+  font-family: var(--tb-serif);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--tb-ink);
+  letter-spacing: -.01em;
+}
+.tb-tools button:hover { color: var(--tb-accent); }
+.tb-tools button:focus-visible { outline: 2px solid var(--tb-accent); outline-offset: 3px; }
+.tb-tools p {
+  font-family: var(--tb-sans);
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--tb-ink-2);
+  margin: 5px 0 0;
+}
+
+@media (max-width: 900px) {
+  .tb-chap { grid-template-columns: 44px minmax(0, 1fr); row-gap: 12px; }
+  .tb-chap .tb-secs { grid-column: 2; columns: 1; }
+  .tb-secs { columns: 1; }
+}
+@media (max-width: 620px) {
+  .tb-title { padding-top: 52px; }
+  .tb-resume .tb-go { margin-left: 0; }
+  .tb-state { gap: 16px 24px; }
+}

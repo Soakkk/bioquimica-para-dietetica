@@ -630,16 +630,16 @@ export default function Home() {
   return (
     <div className="app-shell">
       <header className="topbar">
-        <button className="brand" onClick={() => switchMode("program")} aria-label="Ir al plan de estudio">
-          <span className="brand-mark">B</span><span>Bioquímica<br/><b>para Dietética</b></span>
+        <button className="brand" onClick={() => switchMode("program")} aria-label="Volver al índice">
+          <span>Bioquímica<br/><b>para Dietética</b></span>
         </button>
-        <nav aria-label="Secciones principales">
-          <button aria-current={mode === "program" ? "page" : undefined} className={mode === "program" ? "active" : ""} onClick={() => switchMode("program")}><span>01</span> Mi ruta</button>
-          <button aria-current={mode === "learn" || mode === "nomenclature" ? "page" : undefined} className={mode === "learn" || mode === "nomenclature" ? "active" : ""} onClick={() => switchMode("learn")}><span>02</span> Tema 1 · Carbono</button>
-          <button aria-current={mode === "practice" ? "page" : undefined} className={mode === "practice" ? "active" : ""} onClick={() => { setPracticeModuleFilter(null); setPracticeView("routes"); setQuestionAt(0); switchMode("practice"); }}><span>03</span> Repasar</button>
-          <button aria-current={mode === "lab" && labReturnModule === null && labReturnQuestion === null ? "page" : undefined} className={mode === "lab" && labReturnModule === null && labReturnQuestion === null ? "active" : ""} onClick={() => { setLabReturnModule(null); setLabReturnQuestion(null); switchMode("lab"); }}><span>04</span> Laboratorio</button>
+        <nav aria-label="Secciones del libro">
+          <button aria-current={mode === "program" ? "page" : undefined} className={mode === "program" ? "active" : ""} onClick={() => switchMode("program")}>Índice</button>
+          <button aria-current={mode === "practice" ? "page" : undefined} className={mode === "practice" ? "active" : ""} onClick={() => { setPracticeModuleFilter(null); setPracticeView("srs"); setQuestionAt(0); switchMode("practice"); }}>Repaso</button>
+          <button aria-current={mode === "lab" ? "page" : undefined} className={mode === "lab" ? "active" : ""} onClick={() => { setLabReturnModule(null); setLabReturnQuestion(null); switchMode("lab"); }}>Laboratorio</button>
+          <button aria-current={mode === "nomenclature" ? "page" : undefined} className={mode === "nomenclature" ? "active" : ""} onClick={() => switchMode("nomenclature")}>Nomenclatura</button>
         </nav>
-        <div className="xp"><span>✦</span><b>{xp} XP</b><small>{courseProgress}% completado</small></div>
+        <div className="xp"><b>{courseProgress}%</b><small>del libro</small></div>
       </header>
 
       {mode === "program" && <BioCourse key={`bio-course-${resetEpoch}`}
@@ -647,7 +647,7 @@ export default function Home() {
         scores={themeScores}
         onComplete={completeBioTheme}
         onEarn={earn}
-        onOpenCarbon={() => switchMode("learn")}
+        onOpenNomenclature={() => switchMode("nomenclature")}
         onOpenLab={() => { setLabReturnModule(null); setLabReturnQuestion(null); switchMode("lab"); }}
         onOpenReview={() => { setPracticeModuleFilter(null); setPracticeView("routes"); setQuestionAt(0); switchMode("practice"); }}
       />}

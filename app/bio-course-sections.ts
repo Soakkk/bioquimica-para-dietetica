@@ -156,6 +156,174 @@ export const blockSections: Record<string, BlockSection[]> = {
   ],
 
   // ───────────────────────── TEMA 2 · Hidratos de carbono ─────────────────────────
+  "t1-b6": [
+    {
+      heading: "Numerar es una comparación, no una costumbre",
+      paragraphs: [
+        "Una vez elegida la cadena principal hay que numerarla, y aquí casi todo el mundo comete el mismo error: empezar por la izquierda porque es como se lee. La numeración no se elige por comodidad, se gana comparando.",
+        "El procedimiento es mecánico. Numera desde un extremo y anota dónde caen los sustituyentes. Numera desde el otro y anota lo mismo. Después compara las dos listas en el primer punto donde difieran: gana la que tenga el número más bajo en esa posición.",
+        "Para una cadena de seis carbonos con dos metilos, una numeración da 2,4 y la otra da 3,5. En el primer punto de diferencia, 2 es menor que 3, así que el nombre correcto es 2,4-dimetilhexano.",
+      ],
+      note: "Si las dos numeraciones empatan en el primer sustituyente, se pasa al siguiente, y así hasta que una gane.",
+    },
+    {
+      heading: "El orden alfabético y los prefijos de cantidad",
+      paragraphs: [
+        "Cuando los sustituyentes son distintos hay que decidir en qué orden se citan, y ahí manda el alfabeto: etil antes que metil, aunque el metil esté en un carbono anterior.",
+        "Los prefijos di-, tri- y tetra- cuentan repeticiones, pero no participan en la ordenación alfabética. En 3-etil-2-metilhexano el etil va primero por la e, no por su posición.",
+      ],
+      formula: "3-etil-2-metilhexano   ·   comas entre números, guiones entre número y palabra",
+      note: "La puntuación también se corrige en un examen: 2,4-dimetilhexano, nunca 2-4 dimetilhexano.",
+    },
+  ],
+
+  "t1-b7": [
+    {
+      heading: "La familia más simple, y la que sostiene el resto",
+      paragraphs: [
+        "Un alcano acíclico solo tiene enlaces simples entre carbonos. Eso lo convierte en saturado: lleva el máximo número de hidrógenos que una cadena abierta puede sostener, y por eso responde a CₙH₂ₙ₊₂.",
+        "Los dos hidrógenos de más respecto a CₙH₂ₙ salen de los extremos: cada carbono terminal usa una sola valencia para la cadena y le quedan tres libres.",
+      ],
+      formula: "CₙH₂ₙ₊₂   ·   octano: C₈H₁₈",
+    },
+    {
+      heading: "Los prefijos que hay que automatizar",
+      paragraphs: [
+        "Met-, et-, prop-, but-, pent-, hex-, hept-, oct-, non- y dec- cubren de uno a diez carbonos, y conviene tenerlos tan automatizados como las tablas de multiplicar: aparecen en cada nombre del resto del curso.",
+        "No es memorización estéril. Cuando llegues a los ácidos grasos verás cadenas de dieciséis y dieciocho carbonos, y el nombre te dirá la longitud sin tener que contar.",
+        "Leer una fórmula condensada es contar paréntesis. En CH₃—(CH₂)₆—CH₃ hay un carbono al principio, seis dentro del paréntesis y uno al final: ocho en total, octano.",
+      ],
+      note: "El subíndice del paréntesis multiplica el grupo entero, no solo el último átomo.",
+    },
+  ],
+
+  "t1-b8": [
+    {
+      heading: "Un doble enlace cuesta dos hidrógenos",
+      paragraphs: [
+        "Al introducir un C=C, los dos carbonos implicados gastan una valencia extra el uno con el otro, y esa valencia deja de estar disponible para un hidrógeno. Por eso un alqueno con un solo doble enlace responde a CₙH₂ₙ, dos hidrógenos por debajo del alcano equivalente.",
+        "Si hay varios dobles enlaces se localizan todos y se usan las terminaciones -dieno, -trieno y siguientes, con un número por cada insaturación.",
+      ],
+      formula: "CₙH₂ₙ₊₂ → CₙH₂ₙ   ·   pent-2-eno: CH₃—CH=CH—CH₂—CH₃",
+    },
+    {
+      heading: "Aislados, conjugados y acumulados",
+      paragraphs: [
+        "Cuando hay más de un doble enlace, importa cómo están colocados entre sí. Si se alternan con enlaces simples uno sí y uno no, están conjugados; si están separados por más carbonos, aislados; si comparten un carbono, acumulados.",
+        "En nutrición esto tiene consecuencias concretas: la mayoría de los ácidos grasos poliinsaturados de la dieta son metileno-interrumpidos, es decir, con un CH₂ entre cada par de dobles enlaces, y no conjugados. El ácido linoleico conjugado es precisamente la excepción que se nombra aparte.",
+      ],
+      note: "Que un aceite sea poliinsaturado no significa que sus dobles enlaces estén conjugados.",
+    },
+    {
+      heading: "El giro bloqueado y la geometría cis/trans",
+      paragraphs: [
+        "En un enlace simple los carbonos pueden girar libremente uno respecto al otro. En un doble enlace no: la rotación está restringida, y eso congela la posición de lo que cuelga a cada lado.",
+        "Si los dos sustituyentes principales quedan del mismo lado, la configuración es cis y la cadena hace un codo. Si quedan en lados opuestos es trans, y la cadena sigue casi recta.",
+        "Esa diferencia geométrica es exactamente la que separa una grasa cis de una grasa trans, y explica que unas sean líquidas a temperatura ambiente y otras se apilen como las saturadas. Lo verás desarrollado en el Tema 3.",
+      ],
+    },
+  ],
+
+  "t1-b9": [
+    {
+      heading: "Tres valencias comprometidas de golpe",
+      paragraphs: [
+        "Un triple enlace no es un doble reforzado: es un carbono gastando tres de sus cuatro valencias en un solo vecino. Le queda una, y solo una.",
+        "De ahí se deduce todo lo demás sin memorizar nada. Un carbono terminal de alquino admite exactamente un hidrógeno, y por eso se escribe HC≡C— y nunca H₂C≡C—.",
+        "También se deduce la fórmula general: cada insaturación cuesta dos hidrógenos, así que un alquino con un triple queda dos por debajo del alqueno y cuatro por debajo del alcano.",
+      ],
+      formula: "CₙH₂ₙ₊₂ → CₙH₂ₙ → CₙH₂ₙ₋₂",
+      note: "El triple enlace es lineal: los dos carbonos y sus vecinos quedan alineados, y por eso los alquinos no tienen isomería cis/trans.",
+    },
+    {
+      heading: "Cuando conviven varias insaturaciones",
+      paragraphs: [
+        "Con dos triples enlaces se usa la terminación -diino y con tres, -triino, siempre con un localizador por cada uno. Nona-2,5-diino son nueve carbonos con triples que arrancan en el segundo y en el quinto.",
+        "Si en la misma cadena coexisten dobles y triples se nombran ambos y se numera buscando los localizadores más bajos para el conjunto, no para un tipo por separado.",
+        "Es una extensión de lo que ya sabes y aparece en los ejercicios del libro, aunque en la práctica dietética te cruzarás mucho más con dobles enlaces —las grasas insaturadas— que con triples.",
+      ],
+    },
+  ],
+
+  "t1-b10": [
+    {
+      heading: "Cerrar el anillo también cuesta hidrógenos",
+      paragraphs: [
+        "Para unir los dos extremos de una cadena abierta, cada carbono terminal tiene que ceder un hidrógeno y usar esa valencia para enlazarse con el otro. Se gana un enlace C—C y se pierden dos C—H.",
+        "El resultado es que un cicloalcano saturado responde a CₙH₂ₙ, la misma fórmula que un alqueno con el mismo número de carbonos. Y ahí está la trampa clásica.",
+        "C₅H₁₀ puede ser ciclopentano o puede ser un penteno. La fórmula molecular sola no lo distingue: hace falta ver la estructura. Lo que ambos comparten es tener un grado de insaturación, que se puede gastar en un doble enlace o en cerrar un ciclo.",
+      ],
+      formula: "C₅H₁₀ = ciclopentano  ó  pent-1-eno",
+      note: "Este es el motivo de que «grado de insaturación» sea más útil que «número de dobles enlaces».",
+    },
+    {
+      heading: "Nombrar el anillo",
+      paragraphs: [
+        "El nombre se forma con el prefijo ciclo- seguido del alcano correspondiente: ciclopentano, ciclohexano.",
+        "Si el anillo lleva sustituyentes, se numera para obtener el conjunto de localizadores más bajo, igual que en una cadena abierta. La diferencia es que en un anillo puedes empezar por cualquier carbono y girar en cualquier sentido, así que hay más numeraciones que comparar.",
+      ],
+    },
+  ],
+
+  "t1-b11": [
+    {
+      heading: "Qué significa realmente aromático",
+      paragraphs: [
+        "El benceno es C₆H₆: un anillo de seis carbonos que suele dibujarse con tres dobles enlaces alternos. Ese dibujo es una convención heredada y describe mal lo que ocurre.",
+        "Los electrones π no están fijos en tres posiciones ni saltan de una a otra: están deslocalizados, repartidos de forma estable por los seis carbonos. Por eso todos los enlaces del anillo son equivalentes y miden lo mismo, cosa que no pasaría si hubiera simples y dobles alternándose.",
+        "El círculo dentro del hexágono es la forma honesta de dibujarlo, y esa deslocalización es la que da al benceno su estabilidad característica.",
+      ],
+      note: "«Aromático» describe esa estructura electrónica, no que el compuesto huela a algo. El nombre viene de la historia de la química, no de la nariz.",
+    },
+    {
+      heading: "Dónde te lo vas a encontrar",
+      paragraphs: [
+        "El anillo bencénico aparece por todas partes en bioquímica y en nutrición. Con un —OH unido directamente al anillo tienes un fenol, que no se comporta como un alcohol corriente.",
+        "También lo llevan aminoácidos como la fenilalanina y la tirosina, muchos compuestos bioactivos de los alimentos y buena parte de los fármacos.",
+        "Para Dietética el objetivo no es dominar los mecanismos de reacción aromáticos, sino reconocer el anillo cuando aparezca y saber qué grupos lleva colgando.",
+      ],
+    },
+  ],
+
+  "t1-b12": [
+    {
+      heading: "Un anillo con un intruso dentro",
+      paragraphs: [
+        "Un heterociclo es un anillo que incorpora uno o más átomos distintos del carbono —nitrógeno, oxígeno o azufre— formando parte del propio ciclo, no colgando de él.",
+        "Esa diferencia basta para que deje de ser un hidrocarburo, porque un hidrocarburo contiene exclusivamente carbono e hidrógeno. Es un compuesto orgánico cíclico, pero no un hidrocarburo.",
+      ],
+      note: "El heteroátomo tiene que estar en el anillo. Un ciclohexano con un —OH colgando sigue siendo un derivado de hidrocarburo, no un heterociclo.",
+    },
+    {
+      heading: "Los tres que conviene reconocer ya",
+      paragraphs: [
+        "Pirrol, pirimidina y purina son los esqueletos que más vas a reencontrar. El pirrol aparece en las porfirinas, y de ahí en el grupo hemo de la hemoglobina.",
+        "La pirimidina es la base estructural de citosina, timina y uracilo; la purina, la de adenina y guanina. Cuando llegues al Tema 5 y hables de bases nitrogenadas, estarás hablando de estos dos anillos.",
+        "En esta fase basta con localizar el heteroátomo y relacionar el anillo con la biomolécula donde aparece. La nomenclatura sistemática detallada de heterociclos no es prioritaria en la FP de Dietética, y aprenderla ahora restaría tiempo a lo que sí cae.",
+      ],
+    },
+  ],
+
+  "t1-b13": [
+    {
+      heading: "Formular no termina al escribir",
+      paragraphs: [
+        "Es tentador dar por buena una estructura en cuanto se parece a lo que pedía el enunciado. Ese es el momento exacto en que conviene desconfiar: una formulación no está terminada hasta que se ha auditado.",
+        "La auditoría es mecánica y rápida. Recorre cada carbono y suma los órdenes de sus enlaces: un simple vale 1, un doble vale 2 y un triple vale 3. El total tiene que ser cuatro en todos y cada uno.",
+        "Después haz lo mismo con el resto: el hidrógeno forma un enlace, el oxígeno habitualmente dos y el nitrógeno habitualmente tres en el nivel de este curso.",
+      ],
+      formula: "CH₃=CH₃  ✕  cada C sumaría 3 + 2 = 5      CH₂=CH₂  ✓  cada C suma 2 + 2 = 4",
+    },
+    {
+      heading: "El segundo control: contar átomos",
+      paragraphs: [
+        "Cuando la tetravalencia cuadra, cuenta todos los átomos y escribe la fórmula molecular. Esta segunda pasada detecta lo que la primera deja escapar: cadenas con un carbono de más, hidrógenos olvidados en un extremo o ramas contadas dos veces.",
+        "Las dos comprobaciones juntas atrapan casi cualquier error de formulación, incluidos los que producen un nombre de aspecto perfectamente razonable.",
+      ],
+      note: "Si un carbono te sale con cinco enlaces, no busques la excepción: busca el error.",
+    },
+  ],
+
   "t2-b1": [
     {
       heading: "Qué es realmente un carbohidrato",

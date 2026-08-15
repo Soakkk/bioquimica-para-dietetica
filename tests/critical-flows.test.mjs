@@ -536,3 +536,27 @@ test("la posición de lectura nunca devuelve un índice fuera de los bloques", (
   assert.equal(place.blockIndexAt([], 500, 900), 0, "Sin bloques, índice neutro");
   assert.equal(place.blockIndexAt([0], -500, 900), 0, "Scroll negativo no rompe el cálculo");
 });
+
+test("los ejercicios rescatados del Tema 1 vuelven al circuito de repaso", () => {
+  const legacy = executeDataModule(readSource("app/bio-question-bank-legacy.ts").source);
+  const rescatadas = legacy.legacyTema1Questions;
+
+  assert.ok(rescatadas.length > 50, "Deben seguir rescatadas las preguntas de la guía antigua");
+
+  for (const question of rescatadas) {
+    assert.equal(question.themeId, "tema-1-carbono", `${question.id} debe apuntar al capítulo 1`);
+    assert.ok(
+      question.options.includes(question.correctAnswer),
+      `${question.id}: la respuesta correcta debe estar entre las opciones`,
+    );
+    assert.ok(question.explanation.length > 20, `${question.id} necesita explicación`);
+  }
+
+  // Y siguen sin explicación por opción: es deuda conocida, no un descuido.
+  const conNotas = rescatadas.filter((question) => question.optionNotes).length;
+  assert.equal(
+    conNotas,
+    0,
+    "Si ya llevan notas por opción, muévelas al banco curado y quita esta excepción",
+  );
+});
