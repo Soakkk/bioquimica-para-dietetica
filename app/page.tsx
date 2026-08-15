@@ -275,6 +275,9 @@ export default function Home() {
   const [questionAt, setQuestionAt] = useState(0);
   const [practiceModuleFilter, setPracticeModuleFilter] = useState<number | null>(null);
   const [practiceView, setPracticeView] = useState<"srs" | "routes" | "free">("srs");
+  // El gimnasio ya se abre desde el menú, así que el aviso de "vuelve a tu
+  // lección" solo tiene sentido si de verdad se entró desde una.
+  const [nomenclatureFromLesson, setNomenclatureFromLesson] = useState(false);
   const [picked, setPicked] = useState<number | null>(null);
   const [feedback, setFeedback] = useState<"correct" | "wrong" | null>(null);
   const [showHint, setShowHint] = useState(false);
@@ -637,7 +640,7 @@ export default function Home() {
           <button aria-current={mode === "program" ? "page" : undefined} className={mode === "program" ? "active" : ""} onClick={() => switchMode("program")}>Índice</button>
           <button aria-current={mode === "practice" ? "page" : undefined} className={mode === "practice" ? "active" : ""} onClick={() => { setPracticeModuleFilter(null); setPracticeView("srs"); setQuestionAt(0); switchMode("practice"); }}>Repaso</button>
           <button aria-current={mode === "lab" ? "page" : undefined} className={mode === "lab" ? "active" : ""} onClick={() => { setLabReturnModule(null); setLabReturnQuestion(null); switchMode("lab"); }}>Laboratorio</button>
-          <button aria-current={mode === "nomenclature" ? "page" : undefined} className={mode === "nomenclature" ? "active" : ""} onClick={() => switchMode("nomenclature")}>Nomenclatura</button>
+          <button aria-current={mode === "nomenclature" ? "page" : undefined} className={mode === "nomenclature" ? "active" : ""} onClick={() => { setNomenclatureFromLesson(false); switchMode("nomenclature"); }}>Nomenclatura</button>
         </nav>
         <div className="xp"><b>{courseProgress}%</b><small>del libro</small></div>
       </header>
@@ -708,7 +711,7 @@ export default function Home() {
             <InlineLessonPractice key={moduleId} moduleId={moduleId} moduleTitle={currentModule.title} questions={lessonQuestions} solved={solved} initialGlobalIndex={lessonReturnQuestion} onSolve={solveInline} onOpenLab={startLessonQuestionLab}/>
             {moduleId === 2 && <div id="branch-embedded"><ChainBranchLesson key={`branches-${resetEpoch}`} embedded onEarn={earn}/></div>}
             {(moduleId === 0 || moduleId === 1 || moduleId === 3) && <section className="lesson-lab-activity"><div><span>PASO 4 · ACTIVIDAD APLICADA</span><h3>Compruébalo construyendo</h3><p>La pizarra se abre con moléculas relacionadas con esta lección y vuelve aquí cuando la estructura sea correcta.</p></div><div>{(moduleId === 0 ? [0,1,2] : moduleId === 1 ? [0,3,4,5] : [3,4,5]).map((targetIndex) => <button key={targetIndex} onClick={() => startLessonLab(targetIndex)}><b>{labTargets[targetIndex].formula}</b><small>{labTargets[targetIndex].name}</small></button>)}</div></section>}
-            {(moduleId === 2 || moduleId === 3) && <div className="optional-free-tool"><div><span>PRÁCTICA EXTRA OPCIONAL</span><b>Gimnasio de nomenclatura</b><p>Úsalo después de completar los ejercicios de esta lección si quieres practicar muchas variantes.</p></div><button onClick={() => switchMode("nomenclature")}>Abrir práctica libre →</button></div>}
+            {(moduleId === 2 || moduleId === 3) && <div className="optional-free-tool"><div><span>PRÁCTICA EXTRA OPCIONAL</span><b>Gimnasio de nomenclatura</b><p>Úsalo después de completar los ejercicios de esta lección si quieres practicar muchas variantes.</p></div><button onClick={() => { setNomenclatureFromLesson(true); switchMode("nomenclature"); }}>Abrir práctica libre →</button></div>}
             <div className="coach-tip"><span>!</span><div><b>Error frecuente</b><p>{currentModule.tip}</p></div></div>
             {lessonNotice && <p className="lesson-completion-notice" role="status" aria-live="polite">{lessonNotice}</p>}
             <div className="lesson-footer unified-finish"><div><span>PASO 5</span><b>{lessonQuestions.filter((q) => solved.includes(q.globalIndex)).length}/{lessonQuestions.length} ejercicios dominados</b></div><button className="primary" onClick={markModule}>{moduleId === modules.length - 1 ? (themeOneReadyAfterCurrent ? (completed.includes(moduleId) ? "Volver a mi ruta" : "Terminar Tema 1 · +15 XP") : (completed.includes(moduleId) ? "Continuar lecciones pendientes" : "Guardar y seguir pendientes · +15 XP")) : (completed.includes(moduleId) ? "Ir a la siguiente lección" : "Completar lección · +15 XP")} <span>→</span></button></div>
@@ -737,7 +740,7 @@ export default function Home() {
         </>}
       </section>}
 
-      {mode === "nomenclature" && <><div className="context-return"><span>PRÁCTICA EXTRA · LECCIÓN {moduleId + 1}</span><b>Has abierto el gimnasio desde «{currentModule.title}».</b><button onClick={() => { switchMode("learn"); setTimeout(() => document.getElementById("lesson-practice")?.scrollIntoView({ behavior: "smooth" }), 50); }}>← Volver a esta lección</button></div><NomenclatureTrainer key={`nomenclature-${resetEpoch}`} onEarn={earn}/></>}
+      {mode === "nomenclature" && <>{nomenclatureFromLesson && <div className="context-return"><span>PRÁCTICA EXTRA · LECCIÓN {moduleId + 1}</span><b>Has abierto el gimnasio desde «{currentModule.title}».</b><button onClick={() => { switchMode("learn"); setTimeout(() => document.getElementById("lesson-practice")?.scrollIntoView({ behavior: "smooth" }), 50); }}>← Volver a esta lección</button></div>}<NomenclatureTrainer key={`nomenclature-${resetEpoch}`} onEarn={earn}/></>}
 
       {mode === "lab" && <section className="lab-page">
         <div className="page-intro lab-intro"><span className="kicker"><i/> PIZARRA MOLECULAR</span><h1>Construye. Une. Comprueba.</h1><p>Añade los átomos y únelos tocando primero uno y después otro. La guía te indica siempre el siguiente paso.</p></div>

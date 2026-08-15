@@ -560,3 +560,18 @@ test("los ejercicios rescatados del Tema 1 vuelven al circuito de repaso", () =>
     "Si ya llevan notas por opción, muévelas al banco curado y quita esta excepción",
   );
 });
+
+test("todas las secciones del libro abren con una cuestión", () => {
+  const opening = executeDataModule(readSource("app/opening-questions.ts").source);
+  const escritas = opening.openingQuestions;
+
+  const sinApertura = bioThemes.flatMap((theme) =>
+    theme.blocks.filter((block) => !escritas[block.id]).map((block) => `${theme.number}: ${block.title}`),
+  );
+
+  assert.deepEqual(
+    sinApertura,
+    [],
+    "Toda sección debe abrir con su pregunta; si añades una nueva, escríbele la suya",
+  );
+});
