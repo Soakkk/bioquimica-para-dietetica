@@ -316,39 +316,58 @@ test("el temario conserva los doce temas y práctica evaluable en cada uno", () 
   }
 });
 
-test("comprobar una respuesta correcta del quiz no cambia de pregunta automáticamente", () => {
-  const themeQuiz = findFunction(bioCourse.ast, "ThemeQuiz");
-  const checkAnswer = findFunction(themeQuiz, "checkAnswer");
+test("apostar en la cuestión de apertura no revela el veredicto", () => {
+  // El mecanismo entero depende de esta espera: si al elegir opción se dijera
+  // ya si es correcta, se lee en piloto automático en vez de leer buscando.
+  const { source } = readSource("app/Chapter.tsx");
 
+  const rightClass = source.match(/is-right[\s\S]{0,40}?:/);
+  assert.ok(rightClass, "Debe existir la clase que marca la opción correcta");
+
+  for (const marker of ["is-right", "is-wrong"]) {
+    const index = source.indexOf(marker);
+    const around = source.slice(Math.max(0, index - 220), index);
+    assert.ok(
+      around.includes("revealed"),
+      `La clase ${marker} debe estar condicionada a haber destapado la resolución`,
+    );
+  }
+
+  const betHandler = source.slice(source.indexOf("onClick={() => setBet("), source.indexOf("onClick={() => setBet(") + 120);
   assert.equal(
-    visit(checkAnswer, (node) => callNamed(node, "setCurrentIndex")).length,
-    0,
-    "Comprobar no debe modificar el índice actual",
+    /setRevealed\s*\(\s*true/.test(betHandler),
+    false,
+    "Elegir una opción no debe destapar la resolución",
   );
-  assert.equal(
-    visit(checkAnswer, (node) => callNamed(node, "setTimeout") || callNamed(node, "queueMicrotask")).length,
-    0,
-    "Comprobar no debe programar un avance diferido",
-  );
-
-  const automaticEffects = visit(themeQuiz, (node) => callNamed(node, "useEffect")).filter(
-    (effect) => visit(effect, (node) => callNamed(node, "setCurrentIndex")).length > 0,
-  );
-  assert.equal(automaticEffects.length, 0, "El quiz no debe avanzar mediante un efecto reactivo");
-
-  const manualNextButtons = visit(
-    themeQuiz,
-    (node) =>
-      ts.isJsxElement(node) &&
-      node.openingElement.tagName.getText(bioCourse.ast) === "button" &&
-      /Siguiente pregunta/.test(node.getText(bioCourse.ast)) &&
-      visit(node, (child) => callNamed(child, "setCurrentIndex")).length === 1,
-  );
-  assert.equal(manualNextButtons.length, 1, "Tras acertar debe aparecer un único avance manual");
 });
 
-const bioSections = readSource("app/bio-course-sections.ts");
-const { blockSections } = executeDataModule(bioSections.source);
+test("cada cuestión de apertura es coherente y explica los distractores", () => {
+  const opening = executeDataModule(readSource("app/opening-questions.ts").source);
+  const entries = Object.entries(opening.openingQuestions);
+
+  assert.ok(entries.length > 0, "Debe haber cuestiones de apertura escritas");
+
+  const blockIds = new Set(bioThemes.flatMap((theme) => theme.blocks.map((block) => block.id)));
+
+  for (const [blockId, question] of entries) {
+    assert.ok(blockIds.has(blockId), `${blockId} no corresponde a ningún bloque del temario`);
+    assert.ok(
+      question.answer >= 0 && question.answer < question.options.length,
+      `${blockId}: el índice de la respuesta correcta se sale de las opciones`,
+    );
+    assert.ok(question.resolution.length > 40, `${blockId}: la resolución debe explicar, no sentenciar`);
+
+    question.options.forEach((_option, index) => {
+      if (index === question.answer) return;
+      assert.ok(
+        question.why[index],
+        `${blockId}: falta explicar por qué falla la opción ${index}`,
+      );
+    });
+  }
+});
+
+const { blockSections } = executeDataModule(readSource("app/bio-course-sections.ts").source);
 
 test("cada bloque del temario tiene teoría expandida y ninguna clave sobra", () => {
   const blockIds = bioThemes.flatMap((theme) => theme.blocks.map((block) => block.id));
