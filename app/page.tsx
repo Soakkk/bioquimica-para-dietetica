@@ -631,7 +631,7 @@ export default function Home() {
   }
 
   return (
-    <div className="app-shell">
+    <div className="app-shell tb">
       <header className="topbar">
         <button className="brand" onClick={() => switchMode("program")} aria-label="Volver al índice">
           <span>Bioquímica<br/><b>para Dietética</b></span>

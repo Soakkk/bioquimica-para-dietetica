@@ -260,7 +260,7 @@ export default function Chapter({
   const next = bioThemes.find((item) => item.number === chapter + 1);
 
   return (
-    <div className="tb">
+    <div>
       <div className="tb-runhead">
         <div>
           <button className="tb-back" type="button" onClick={onBack}>

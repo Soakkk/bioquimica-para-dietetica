@@ -80,8 +80,7 @@ function CourseDashboard({
   };
 
   return (
-    <div className="tb">
-      <div className="tb-book tb-front" lang="es">
+    <div className="tb-book tb-front" lang="es">
         <header className="tb-title">
           <p className="tb-imprint">Formación Profesional · Dietética</p>
           <h1>Bioquímica para Dietética</h1>
@@ -259,7 +258,6 @@ function CourseDashboard({
         </section>
 
         <ProgressBackup />
-      </div>
     </div>
   );
 }
