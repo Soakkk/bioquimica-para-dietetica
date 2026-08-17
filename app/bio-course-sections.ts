@@ -133,29 +133,69 @@ export const blockSections: Record<string, BlockSection[]> = {
     {
       heading: "El grupo funcional es el entorno completo",
       paragraphs: [
-        "Un grupo funcional es la parte de la molécula que decide cómo reacciona. Y para identificarlo no basta con ver un átomo suelto: hay que mirar todo su entorno, porque el mismo oxígeno significa cosas distintas según a qué esté unido.",
-        "Un —OH unido a una cadena es un alcohol; ese mismo —OH unido a un anillo aromático es un fenol, con propiedades diferentes. Un C=O al final de la cadena es un aldehído; el mismo C=O dentro de la cadena es una cetona.",
+        "Un grupo funcional no es un átomo suelto: es una combinación característica de átomos y enlaces que aparece en muchas moléculas distintas y que decide cómo reacciona cada una.",
+        "La regla que sostiene todo el tema es que el entorno importa. Un —OH unido a un carbono alifático es un alcohol y se comporta como tal. El mismo —OH unido a un anillo aromático es un fenol, y su química es otra. La pieza que colgamos parece la misma, pero el vecino cambia las propiedades.",
+        "Por eso conviene mirar siempre el conjunto: qué átomo va con cuál, qué tipo de enlace los une y qué queda al otro lado. Con ese hábito, identificar un grupo funcional deja de ser memorizar y pasa a ser leer.",
       ],
+      note: "Si tienes dudas, pregúntate primero qué átomos hay en el entorno inmediato y qué enlaces los conectan.",
     },
     {
-      heading: "Los que reaparecerán en todo el curso",
+      heading: "Alcoholes, fenoles y éteres: la familia del oxígeno con enlace simple",
       paragraphs: [
-        "Estos seis son los que vas a reconocer una y otra vez en glúcidos, grasas, aminoácidos y nucleótidos. Merece la pena tenerlos automatizados desde ya.",
+        "Los alcoholes tienen un —OH unido a un carbono alifático: R—OH. Metanol, etanol y glicerol son los ejemplos que reaparecerán, y la ramificación decide si el alcohol es primario, secundario o terciario.",
+        "Los fenoles llevan ese mismo —OH sobre un carbono aromático: Ar—OH. Se distinguen de los alcoholes porque el anillo altera la acidez del hidrógeno, y por eso muchos compuestos bioactivos y fármacos son fenoles.",
+        "Los éteres cambian el hidrógeno por otro carbono: R—O—R'. Son poco reactivos y aparecen en anestésicos y en algunos aromas naturales.",
       ],
-      formula: "R—OH alcohol · R—CHO aldehído · R—CO—R′ cetona\nR—COOH ácido · R—COO—R′ éster · R—NH₂ amina · R—CONH—R′ amida",
-      note: "El enlace peptídico de las proteínas es una amida, y el enlace de los triglicéridos es un éster. Ya los conoces sin saberlo.",
+      formula: "R—OH  ·  Ar—OH  ·  R—O—R'",
+    },
+    {
+      heading: "Aldehídos y cetonas: el carbonilo cambia según dónde caiga",
+      paragraphs: [
+        "Los dos comparten el grupo C=O, el carbonilo, pero se diferencian por dónde queda dentro de la cadena.",
+        "En un aldehído el carbonilo está en un extremo y lleva al menos un hidrógeno: R—CHO. En una cetona está entre dos carbonos: R—CO—R'. La reactividad de los aldehídos es notablemente mayor por ese H accesible, y ese matiz reaparecerá al hablar de azúcares reductores en el capítulo 2.",
+      ],
+      formula: "aldehído: R—CHO   ·   cetona: R—CO—R'",
+      note: "Un truco de lectura: si el C=O está pegado al final de la fórmula (—CHO), es aldehído; si está encajado entre dos —C, es cetona.",
+    },
+    {
+      heading: "Ácidos carboxílicos, ésteres y amidas: el carbonilo con vecino",
+      paragraphs: [
+        "El ácido carboxílico añade un —OH al carbonilo: R—COOH. Es el grupo de todos los ácidos grasos y de los aminoácidos, y es el responsable del carácter ácido de esos compuestos.",
+        "Un éster nace al sustituir el —H del ácido por un —R': R—COO—R'. Se forma con pérdida de agua y aparece en aromas, en grasas —los triglicéridos son triésteres del glicerol— y en la propia acetilcolina.",
+        "Una amida sustituye el —OH del ácido por un —NHR: R—CO—NHR'. Es el enlace peptídico que une aminoácidos en las proteínas.",
+      ],
+      formula: "R—COOH   ·   R—COO—R'   ·   R—CO—NH—R'",
+    },
+    {
+      heading: "Aminas: el nitrógeno cambia el escenario",
+      paragraphs: [
+        "Un amina se define por un nitrógeno con enlaces simples a carbono e hidrógeno. Es primaria si tiene un solo carbono unido (R—NH₂), secundaria con dos, y terciaria con tres.",
+        "El nitrógeno aporta un par de electrones libre, y por eso las aminas son básicas: en agua tienden a captar un protón y quedar cargadas. Esa carga condiciona su solubilidad y su comportamiento en el pH del organismo.",
+        "El grupo amino aparece en los aminoácidos, en muchas hormonas y en la mayoría de fármacos que actúan sobre el sistema nervioso.",
+      ],
+      formula: "R—NH₂   ·   R—NHR'   ·   R—NR'R''",
+      note: "No confundas amina con amida: la amina no tiene C=O al lado; la amida sí.",
+    },
+    {
+      heading: "Cuatro parejas que se confunden todo el rato",
+      paragraphs: [
+        "Alcohol y fenol comparten el —OH. Lo que cambia es el vecino: alifático en el alcohol, aromático en el fenol.",
+        "Aldehído y cetona comparten el carbonilo. Lo que cambia es la posición: en el extremo con un H en el aldehído, entre dos carbonos en la cetona.",
+        "Éster y amida comparten estar formados a partir de un ácido carboxílico. Lo que cambia es qué reemplaza al —OH: un oxígeno unido a otro carbono en el éster, un nitrógeno en la amida.",
+        "Amina y amida comparten el nitrógeno. Lo que cambia es el vecino: en la amina el N no está unido a un carbonilo, en la amida sí.",
+      ],
+      note: "Antes de nombrar, contesta a esas cuatro preguntas: casi todo lo que aparece en el curso encaja en una de las cuatro parejas.",
     },
     {
       heading: "Isomería: misma fórmula, distinta molécula",
       paragraphs: [
-        "Dos isómeros comparten fórmula molecular pero difieren en la estructura o en la disposición espacial. No son la misma sustancia, y normalmente ni siquiera se parecen en su comportamiento.",
-        "La isomería de cadena, de posición y de función cambia la conectividad: qué está unido a qué. La isomería cis-trans y la quiralidad no cambian la conectividad, solo la orientación en el espacio.",
-        "Un ejemplo que cierra el tema: butanal y butan-2-ona son los dos C₄H₈O. En el butanal el carbonilo está al final, así que es un aldehído; en la butan-2-ona está dentro de la cadena, así que es una cetona. Misma fórmula, funciones químicas distintas — son isómeros de función.",
+        "Dos compuestos son isómeros cuando comparten fórmula molecular pero difieren en la estructura o en la disposición espacial. Ni tienen las mismas propiedades ni son intercambiables.",
+        "En este curso importan tres tipos. La isomería de cadena cambia la ramificación del esqueleto de carbonos. La de posición mueve el mismo grupo funcional por la cadena. La de función cambia el grupo entero, como pasa entre butanal y butanona, o entre glucosa y fructosa: misma fórmula, funciones químicas distintas.",
+        "Añade la isomería cis-trans, que ya conoces del doble enlace, y la quiralidad, que aparecerá con los aminoácidos y los azúcares. Todas son razones distintas por las que la fórmula molecular sola no basta para identificar un compuesto.",
       ],
     },
   ],
 
-  // ───────────────────────── TEMA 2 · Hidratos de carbono ─────────────────────────
   "t1-b6": [
     {
       heading: "Numerar es una comparación, no una costumbre",
